@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -6,11 +6,49 @@ export default function Navbar() {
       <h2 style={styles.logo}>Fitness Coaching</h2>
 
       <div style={styles.links}>
-        <Link to="/" style={styles.link}>Accueil</Link>
-        <Link to="/coaches" style={styles.link}>Coachs</Link>
-        <Link to="/login" style={styles.link}>Connexion</Link>
-        <Link to="/register" style={styles.link}>Inscription</Link>
-        <Link to="/dashboard" style={styles.link}>Dashboard</Link>
+        <NavLink to="/" style={({ isActive }) => ({
+  ...styles.link,
+  color: isActive ? "#2563eb" : "white",
+})}>
+  Accueil
+  </NavLink>
+    
+        <NavLink to="/coaches" style={({ isActive }) => ({
+  ...styles.link,
+  color: isActive ? "#2563eb" : "white",
+})}>
+  Coachs
+</NavLink>
+
+        <NavLink
+  to="/login"
+  style={({ isActive }) => ({
+    ...styles.link,
+    color: isActive ? "#2563eb" : "white",
+  })}
+>
+  Connexion
+</NavLink>
+
+        <NavLink
+  to="/register"
+  style={({ isActive }) => ({
+    ...styles.link,
+    color: isActive ? "#2563eb" : "white",
+  })}
+>
+  Inscription
+</NavLink>
+
+        <NavLink
+  to="/dashboard"
+  style={({ isActive }) => ({
+    ...styles.link,
+    color: isActive ? "#2563eb" : "white",
+  })}
+>
+  Dashboard
+</NavLink>
       </div>
     </nav>
   );
@@ -32,9 +70,10 @@ const styles = {
     display: "flex",
     gap: "20px",
   },
+  
   link: {
-    color: "white",
-    textDecoration: "none",
-    fontWeight: "bold",
-  },
+  color: "white",
+  textDecoration: "none",
+  cursor: "pointer", // IMPORTANT
+}
 };

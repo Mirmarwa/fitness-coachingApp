@@ -1,3 +1,6 @@
+import HeroSection from "../components/HeroSection";
+import FeatureSection from "../components/FeatureSection";
+import CoachPreview from "../components/CoachPreview";
 export default function Home() {
   return (
     <div style={styles.container}>
@@ -10,6 +13,9 @@ export default function Home() {
         <button style={styles.primary}>Commencer</button>
         <button style={styles.secondary}>Découvrir les coachs</button>
       </div>
+      <div><HeroSection />
+      <FeatureSection />
+      <CoachPreview /></div>
     </div>
   );
 }
