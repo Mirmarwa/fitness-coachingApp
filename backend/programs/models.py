@@ -6,6 +6,7 @@ class Program(models.Model):
     description = models.TextField()
     duration = models.IntegerField()  # en jours
     coach = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='programs/', blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -45,6 +46,9 @@ class Progress(models.Model):
     weight = models.FloatField()
     notes = models.TextField(blank=True)
     date = models.DateField(auto_now_add=True)
+    image = models.ImageField(upload_to='programs/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.weight}kg"
+
+
