@@ -1,7 +1,18 @@
+import { useEffect, useState } from "react";
 import HeroSection from "../components/HeroSection";
 import FeatureSection from "../components/FeatureSection";
 import CoachPreview from "../components/CoachPreview";
+
 export default function Home() {
+  const [programs, setPrograms] = useState([]);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/programs/")
+      .then((res) => res.json())
+      .then((data) => setPrograms(data))
+      .catch((err) => console.log(err));
+  }, []);
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Bienvenue sur Fitness Coaching App</h1>
@@ -13,9 +24,34 @@ export default function Home() {
         <button style={styles.primary}>Commencer</button>
         <button style={styles.secondary}>Découvrir les coachs</button>
       </div>
-      <div><HeroSection />
+
+      <HeroSection />
       <FeatureSection />
-      <CoachPreview /></div>
+      <CoachPreview />
+
+      {/* 🔥 SECTION PROGRAMMES */}
+      <div style={{ marginTop: "40px" }}>
+  <h2>Nos Programmes</h2>
+
+  <div style={{ display: "flex", gap: "20px", justifyContent: "center" }}>
+    {programs.map((program) => (
+      <div
+        key={program.id}
+        style={{
+          border: "1px solid #ddd",
+          padding: "20px",
+          borderRadius: "10px",
+          width: "250px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h3>{program.title}</h3>
+        <p>{program.description}</p>
+        <p><strong>{program.duration} jours</strong></p>
+      </div>
+    ))}
+  </div>
+</div>
     </div>
   );
 }
