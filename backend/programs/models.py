@@ -46,7 +46,7 @@ class Progress(models.Model):
     weight = models.FloatField()
     notes = models.TextField(blank=True)
     date = models.DateField(auto_now_add=True)
-    image = models.ImageField(upload_to='programs/', blank=True, null=True)
+    
 
     def __str__(self):
         return f"{self.user.username} - {self.weight}kg"
