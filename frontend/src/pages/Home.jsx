@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import HeroSection from "../components/HeroSection";
 import FeatureSection from "../components/FeatureSection";
 import CoachPreview from "../components/CoachPreview";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const [programs, setPrograms] = useState([]);
@@ -35,21 +36,28 @@ export default function Home() {
 
   <div style={{ display: "flex", gap: "20px", justifyContent: "center" }}>
     {programs.map((program) => (
-      <div
-        key={program.id}
-        style={{
-          border: "1px solid #ddd",
-          padding: "20px",
-          borderRadius: "10px",
-          width: "250px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h3>{program.title}</h3>
-        <p>{program.description}</p>
-        <p><strong>{program.duration} jours</strong></p>
-      </div>
-    ))}
+  <div
+    key={program.id}
+    style={{
+      border: "1px solid #ddd",
+      padding: "20px",
+      borderRadius: "10px",
+      width: "250px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    }}
+  >
+    <h3>{program.title}</h3>
+    <p>{program.description}</p>
+    <p><strong>{program.duration} jours</strong></p>
+
+    <Link to={`/program/${program.id}`}>
+      <button style={{ marginTop: "10px" }}>
+        Voir détails
+      </button>
+    </Link>
+
+  </div>
+))}
   </div>
 </div>
     </div>
