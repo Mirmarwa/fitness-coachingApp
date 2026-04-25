@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 from rest_framework import serializers
 from .models import Program, Exercise, NutritionPlan
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -11,6 +12,9 @@ class NutritionPlanSerializer(serializers.ModelSerializer):
         model = NutritionPlan
         fields = '__all__'
         
+=======
+
+>>>>>>> 1e52c4f (backend API completed with DRF (users, coaches, programs, payments))
 class ProgramSerializer(serializers.ModelSerializer):
     exercises = ExerciseSerializer(many=True, read_only=True)
     nutrition_plans = NutritionPlanSerializer(many=True, read_only=True)

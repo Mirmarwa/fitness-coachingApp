@@ -18,10 +18,28 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework.routers import DefaultRouter
+
+from programs.views import ProgramViewSet
+from users.views import UserViewSet
+from payments.views import PaymentViewSet
+from coaching.views import CoachViewSet
+
+router = DefaultRouter()
+router.register(r'programs', ProgramViewSet)
+router.register(r'users', UserViewSet)
+router.register(r'payments', PaymentViewSet)
+router.register(r'coaches', CoachViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+<<<<<<< HEAD
     path('api/', include('programs.urls')),
     path('api/', include('payments.urls')),
+=======
+
+    path('api/', include(router.urls)),
+>>>>>>> 1e52c4f (backend API completed with DRF (users, coaches, programs, payments))
 ]
+
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
