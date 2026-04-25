@@ -1,29 +1,36 @@
-<<<<<<< HEAD
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Payment
 from .serializers import PaymentSerializer
 from programs.models import Program
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 
 @api_view(['POST'])
 def create_payment(request):
-    user = request.user  
-    program_id = request.data.get('program_id')
-    amount = request.data.get('amount')
+    try:
+        user = User.objects.first()  # temporaire
 
-    program = Program.objects.get(id=program_id)
+        program_id = request.data.get('program')  # IMPORTANT
+        amount = request.data.get('amount')
 
-    payment = Payment.objects.create(
-        user=user,
-        program=program,
-        amount=amount,
-        status='completed'
-    )
+        program = Program.objects.get(id=program_id)
 
-    serializer = PaymentSerializer(payment)
-    return Response(serializer.data)
+        payment = Payment.objects.create(
+            user=user,
+            program=program,
+            amount=amount,
+            status='completed'
+        )
+
+        serializer = PaymentSerializer(payment)
+        return Response(serializer.data)
+
+    except Exception as e:
+        print("ERREUR :", e)
+        return Response({"error": str(e)})
 
 
 @api_view(['GET'])
@@ -31,13 +38,24 @@ def get_payments(request):
     payments = Payment.objects.all()
     serializer = PaymentSerializer(payments, many=True)
     return Response(serializer.data)
-=======
-from rest_framework import viewsets
-from .models import Payment
-from .serializers import PaymentSerializer
 
 
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
->>>>>>> 1e52c4f (backend API completed with DRF (users, coaches, programs, payments))
+@api_view(['GET'])
+def get_user_payments(request):
+    user = User.objects.first()  # temporaire
+    payments = Payment.objects.filter(user=user)
+    serializer = PaymentSerializer(payments, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def check_payment(request, program_id):
+    user = User.objects.first()  # temporaire
+
+    exists = Payment.objects.filter(
+        user=user,
+        program_id=program_id,
+        status='completed'
+    ).exists()
+
+    return Response({"paid": exists})

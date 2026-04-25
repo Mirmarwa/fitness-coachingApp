@@ -33,13 +33,7 @@ router.register(r'coaches', CoachViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-<<<<<<< HEAD
-    path('api/', include('programs.urls')),
-    path('api/', include('payments.urls')),
-=======
-
-    path('api/', include(router.urls)),
->>>>>>> 1e52c4f (backend API completed with DRF (users, coaches, programs, payments))
+    path('api/', include(router.urls)),  # 🔥 IMPORTANT
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
