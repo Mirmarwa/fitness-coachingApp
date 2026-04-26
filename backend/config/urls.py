@@ -22,18 +22,17 @@ from rest_framework.routers import DefaultRouter
 
 from programs.views import ProgramViewSet
 from users.views import UserViewSet
-from payments.views import PaymentViewSet
 from coaching.views import CoachViewSet
 
 router = DefaultRouter()
 router.register(r'programs', ProgramViewSet)
 router.register(r'users', UserViewSet)
-router.register(r'payments', PaymentViewSet)
 router.register(r'coaches', CoachViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),  # 🔥 IMPORTANT
+    path('api/payments/', include('payments.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

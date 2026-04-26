@@ -1,11 +1,8 @@
 from django.urls import path
-from .views import get_payments, create_payment , get_user_payments, check_payment
-
-
+from .views import get_payments, create_payment, check_payment, get_user_payments
 urlpatterns = [
-    path('payments/', get_payments),
-    path('payments/create/', create_payment),
-    path('payments/my/', get_user_payments),
-    path('payments/check/<int:program_id>/', check_payment),
-    
+    path('', get_payments),  # GET /api/payments/
+    path('create/', create_payment),  # POST /api/payments/create/
+    path('check/<int:program_id>/', check_payment),  # GET /api/payments/check/1/
+    path('my/', get_user_payments),  # GET /api/payments/my/ - 🔥 NOUVEAU ENDPOINT
 ]
