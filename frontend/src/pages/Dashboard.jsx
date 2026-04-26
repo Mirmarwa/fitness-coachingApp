@@ -15,7 +15,11 @@ function Dashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const paymentsResponse = await fetch(`${API_URL}/api/payments/my/`);
+        const paymentsResponse = await fetch("http://127.0.0.1:8000/api/payments/my/", {
+  headers: {
+    "Authorization": `Bearer ${localStorage.getItem("token")}`
+  }
+})
         const paymentsData = await paymentsResponse.json();
         const uniqueProgramIds = [...new Set(paymentsData.map((p) => p.program))];
 

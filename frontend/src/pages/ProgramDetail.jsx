@@ -66,7 +66,11 @@ function ProgramDetail() {
       try {
         const [programResponse, paymentResponse] = await Promise.all([
           fetch(`${API_URL}/api/programs/${id}/`),
-          fetch(`${API_URL}/api/payments/check/${id}/`),
+          fetch(`${API_URL}/api/payments/check/${id}/`, {
+  headers: {
+    "Authorization": `Bearer ${localStorage.getItem("token")}`
+  }
+})
         ]);
 
         if (!programResponse.ok) {
@@ -115,8 +119,9 @@ function ProgramDetail() {
       const res = await fetch(`${API_URL}/api/payments/create/`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-        },
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${localStorage.getItem("token")}`
+},
         body: JSON.stringify({
           program: id,
           amount: price,
