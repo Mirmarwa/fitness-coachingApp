@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { authFetch } from "../services/api";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -40,7 +41,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/programs/`)
+    authFetch(`${API_URL}/api/programs/`)
       .then((res) => res.json())
       .then((data) => setPrograms(Array.isArray(data) ? data : []))
       .catch(() => setPrograms([]))

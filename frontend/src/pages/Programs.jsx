@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import { authFetch, API_BASE_URL } from "../services/api";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -54,6 +56,8 @@ export default function Programs() {
   const [programs, setPrograms] = useState([]);
   const [purchasedIds, setPurchasedIds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aiProgram, setAiProgram] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -64,9 +68,19 @@ export default function Programs() {
         setPrograms(Array.isArray(programsData) ? programsData : []);
 
         try {
-          const paymentsResponse = await fetch(`${API_URL}/api/payments/my/`);
+          const paymentsResponse = await authFetch(`${API_BASE_URL}/payments/my/`);
           const paymentsData = await paymentsResponse.json();
-          setPurchasedIds(paymentsData.map((payment) => payment.program));
+          setPurchasedIds(
+            Array.isArray(paymentsData)
+              ? paymentsData
+                  .map((payment) =>
+                    typeof payment.program === "object"
+                      ? payment.program?.id
+                      : payment.program
+                  )
+                  .filter(Boolean)
+              : []
+          );
         } catch {
           setPurchasedIds([]);
         }
@@ -99,6 +113,84 @@ export default function Programs() {
     }
 
     return description.length > 115 ? `${description.slice(0, 115)}...` : description;
+  };
+
+  const handleGenerateProgram = async () => {
+    setAiLoading(true);
+
+    try {
+      const response = await authFetch(`${API_BASE_URL}/programs/generate-program/`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error("AI generation failed");
+      }
+
+      setAiProgram(data);
+      toast.success("Programme IA généré");
+    } catch {
+      toast.error("Impossible de générer un programme IA");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const renderAiProgram = () => {
+    if (!aiProgram) return null;
+
+    if (typeof aiProgram === "string") {
+      return <p className="ai-text">{aiProgram}</p>;
+    }
+
+    const title = aiProgram.title || aiProgram.name || "Programme personnalisé IA";
+    const description =
+      aiProgram.description ||
+      aiProgram.goal ||
+      aiProgram.objective ||
+      "Voici une proposition générée automatiquement selon les données disponibles.";
+    const exercises = aiProgram.exercises || aiProgram.workouts || [];
+    const nutritionPlans = aiProgram.nutrition_plans || aiProgram.nutrition || [];
+
+    return (
+      <>
+        <h3>{title}</h3>
+        <p className="ai-text">{description}</p>
+
+        {Array.isArray(exercises) && exercises.length > 0 && (
+          <div className="ai-list">
+            <strong>Exercices</strong>
+            {exercises.map((exercise, index) => (
+              <span key={exercise.id || exercise.name || index}>
+                {typeof exercise === "string"
+                  ? exercise
+                  : `${exercise.name || "Exercice"} - ${exercise.sets || 0} séries x ${
+                      exercise.reps || 0
+                    } reps`}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {Array.isArray(nutritionPlans) && nutritionPlans.length > 0 && (
+          <div className="ai-list">
+            <strong>Nutrition</strong>
+            {nutritionPlans.map((plan, index) => (
+              <span key={plan.id || plan.title || index}>
+                {typeof plan === "string"
+                  ? plan
+                  : `${plan.title || "Plan nutritionnel"}${
+                      plan.calories ? ` - ${plan.calories} kcal` : ""
+                    }`}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {!Array.isArray(exercises) && !Array.isArray(nutritionPlans) && (
+          <pre className="ai-json">{JSON.stringify(aiProgram, null, 2)}</pre>
+        )}
+      </>
+    );
   };
 
   return (
@@ -156,6 +248,100 @@ export default function Programs() {
             background: #ffffff;
             border: 1px solid rgba(15, 118, 110, 0.12);
             box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+          }
+
+          .ai-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 28px;
+            padding: 24px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #0f766e, #16a34a);
+            color: white;
+            box-shadow: 0 24px 60px rgba(15, 118, 110, 0.2);
+          }
+
+          .ai-panel h2 {
+            margin: 0 0 8px;
+            font-size: 25px;
+          }
+
+          .ai-panel p {
+            max-width: 680px;
+            margin: 0;
+            color: #dcfce7;
+            line-height: 1.6;
+          }
+
+          .ai-button {
+            min-height: 48px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 15px;
+            background: white;
+            color: #0f766e;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 900;
+            white-space: nowrap;
+            transition: transform 160ms ease, box-shadow 160ms ease;
+          }
+
+          .ai-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.2);
+          }
+
+          .ai-button:disabled {
+            cursor: wait;
+            opacity: 0.78;
+          }
+
+          .ai-result {
+            margin: -8px 0 30px;
+            padding: 24px;
+            border-radius: 22px;
+            background: white;
+            border: 1px solid rgba(15, 118, 110, 0.12);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+          }
+
+          .ai-result h3 {
+            margin: 0 0 10px;
+            color: #0f172a;
+            font-size: 22px;
+          }
+
+          .ai-text {
+            margin: 0 0 16px;
+            color: #52645f;
+            line-height: 1.7;
+          }
+
+          .ai-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 16px;
+          }
+
+          .ai-list strong {
+            color: #0f766e;
+          }
+
+          .ai-list span,
+          .ai-json {
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #d1fae5;
+            color: #334155;
+          }
+
+          .ai-json {
+            overflow: auto;
           }
 
           .programs-count strong {
@@ -297,6 +483,14 @@ export default function Programs() {
             .programs-count {
               min-width: 0;
             }
+
+            .ai-panel {
+              grid-template-columns: 1fr;
+            }
+
+            .ai-button {
+              width: 100%;
+            }
           }
         `}
       </style>
@@ -318,6 +512,26 @@ export default function Programs() {
           </div>
         </header>
 
+        <section className="ai-panel">
+          <div>
+            <h2>Coach IA instantané</h2>
+            <p>
+              Génère une proposition de programme personnalisée et affiche-la
+              directement ici pour inspirer ton prochain entraînement.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="ai-button"
+            onClick={handleGenerateProgram}
+            disabled={aiLoading}
+          >
+            {aiLoading ? "Génération..." : "Générer un programme avec IA"}
+          </button>
+        </section>
+
+        {aiProgram && <section className="ai-result">{renderAiProgram()}</section>}
+
         {loading ? (
           <div className="empty-state">Chargement des programmes...</div>
         ) : visiblePrograms.length === 0 ? (
@@ -325,7 +539,9 @@ export default function Programs() {
         ) : (
           <section className="program-grid">
             {visiblePrograms.map((program) => {
-              const isPaid = purchasedIds.includes(program.id);
+              const isPaid = purchasedIds.some(
+                (purchasedId) => String(purchasedId) === String(program.id)
+              );
 
               return (
                 <article className="program-card" key={program.id}>

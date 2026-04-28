@@ -1,90 +1,232 @@
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { authFetch, API_BASE_URL } from "../services/api";
+
+const getUserIdFromToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_id;
+  } catch {
+    return null;
+  }
+};
+
+const getDisplayName = (user) => {
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+  return fullName || user.username || user.email || "";
+};
 
 export default function Navbar() {
-  const getLinkStyle = ({ isActive }) => ({
-    ...styles.link,
-    ...(isActive ? styles.activeLink : {}),
-  });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isLoggedIn = Boolean(localStorage.getItem("access"));
+  const [displayName, setDisplayName] = useState(
+    localStorage.getItem("user_display_name") || ""
+  );
+
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    const userId = token ? getUserIdFromToken(token) : null;
+
+    if (!token || !userId) {
+      setDisplayName("");
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
+      try {
+        const response = await authFetch(`${API_BASE_URL}/users/${userId}/`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error("Unable to load user");
+        }
+
+        const name = getDisplayName(data);
+
+        if (isMounted) {
+          setDisplayName(name);
+          localStorage.setItem("user_display_name", name);
+        }
+      } catch {
+        if (isMounted) {
+          setDisplayName(localStorage.getItem("username") || "");
+        }
+      }
+    };
+
+    loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("username");
+    localStorage.removeItem("user_display_name");
+    navigate("/login");
+  };
 
   return (
-    <nav style={styles.nav}>
-      <Link to="/" style={styles.logo}>
-        <span style={styles.logoMark}>FC</span>
+    <nav className="app-navbar">
+      <style>
+        {`
+          .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 30px;
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(16px);
+          }
+
+          .app-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-size: 18px;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+          }
+
+          .app-logo-mark {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0f766e, #16a34a);
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.24);
+          }
+
+          .app-nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+
+          .app-nav-link,
+          .user-greeting,
+          .logout-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 13px;
+            border-radius: 999px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 850;
+            text-decoration: none;
+            transition: transform 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+          }
+
+          .app-nav-link:hover,
+          .logout-button:hover {
+            transform: translateY(-1px);
+            background: #f0fdfa;
+            color: #0f766e;
+          }
+
+          .user-greeting {
+            background: #f0fdfa;
+            color: #0f766e;
+            box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.12);
+          }
+
+          .app-nav-link.active {
+            background: #dcfce7;
+            color: #166534;
+            box-shadow: inset 0 0 0 1px rgba(22, 101, 52, 0.08);
+          }
+
+          .logout-button {
+            border: 0;
+            background: #0f766e;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
+          }
+
+          .logout-button:hover {
+            background: #115e59;
+            color: white;
+          }
+
+          @media (max-width: 760px) {
+            .app-navbar {
+              align-items: flex-start;
+              flex-direction: column;
+              padding: 14px 16px;
+            }
+
+            .app-nav-links {
+              width: 100%;
+              justify-content: flex-start;
+            }
+          }
+        `}
+      </style>
+
+      <Link to="/" className="app-logo">
+        <span className="app-logo-mark">FC</span>
         <span>Fitness Coaching</span>
       </Link>
 
-      <div style={styles.links}>
-        <NavLink to="/" style={getLinkStyle}>
+      <div className="app-nav-links">
+        <NavLink to="/" className="app-nav-link">
           Accueil
         </NavLink>
-        <NavLink to="/programmes" style={getLinkStyle}>
+        <NavLink to="/programmes" className="app-nav-link">
           Programmes
         </NavLink>
-        <NavLink to="/dashboard" style={getLinkStyle}>
-          Dashboard
+        <NavLink to="/onboarding" className="app-nav-link">
+          Onboarding
         </NavLink>
-        <NavLink to="/login" style={getLinkStyle}>
-          Connexion
+        {isLoggedIn && (
+          <NavLink to="/dashboard" className="app-nav-link">
+            Dashboard
+          </NavLink>
+        )}
+        <NavLink to="/articles" className="app-nav-link">
+          Articles
         </NavLink>
+        <NavLink to="/coach" className="app-nav-link">
+          Coach
+        </NavLink>
+
+        {isLoggedIn ? (
+          <>
+            {displayName && (
+              <span className="user-greeting">Bonjour {displayName}</span>
+            )}
+            <button type="button" className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavLink to="/login" className="app-nav-link">
+            Login
+          </NavLink>
+        )}
       </div>
     </nav>
   );
 }
-
-const styles = {
-  nav: {
-    position: "sticky",
-    top: 0,
-    zIndex: 20,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "20px",
-    padding: "16px 30px",
-    background: "rgba(255, 255, 255, 0.92)",
-    borderBottom: "1px solid rgba(15, 118, 110, 0.12)",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-    backdropFilter: "blur(14px)",
-  },
-  logo: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "10px",
-    color: "#0f172a",
-    fontSize: "18px",
-    fontWeight: 900,
-    textDecoration: "none",
-    whiteSpace: "nowrap",
-  },
-  logoMark: {
-    display: "grid",
-    placeItems: "center",
-    width: "38px",
-    height: "38px",
-    borderRadius: "14px",
-    background: "#0f766e",
-    color: "white",
-    fontSize: "14px",
-    boxShadow: "0 12px 24px rgba(15, 118, 110, 0.22)",
-  },
-  links: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: "8px",
-    flexWrap: "wrap",
-  },
-  link: {
-    padding: "10px 13px",
-    borderRadius: "999px",
-    color: "#475569",
-    fontSize: "14px",
-    fontWeight: 800,
-    textDecoration: "none",
-    transition: "background 160ms ease, color 160ms ease, transform 160ms ease",
-  },
-  activeLink: {
-    background: "#dcfce7",
-    color: "#166534",
-  },
-};

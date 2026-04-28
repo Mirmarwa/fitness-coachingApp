@@ -30,7 +30,8 @@ export default function Login() {
         throw new Error("Login failed");
       }
 
-      localStorage.setItem("token", data.access);
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("username", username);
 
       if (data.refresh) {
         localStorage.setItem("refresh", data.refresh);

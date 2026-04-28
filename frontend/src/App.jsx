@@ -8,6 +8,9 @@ import Coaches from "./pages/Coaches";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import Dashboard from "./pages/Dashboard";
+import Articles from "./pages/Articles";
+import Coach from "./pages/Coach";
+import Onboarding from "./pages/Onboarding";
 import PrivateRoute from "./components/PrivateRoute";
 
 
@@ -23,9 +26,12 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/coaches" element={<Coaches />} />
+          <Route path="/coach" element={<Coach />} />
+          <Route path="/articles" element={<Articles />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/programmes" element={<Programs />} />
           <Route path="/program/:id" element={<ProgramDetail />} />
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute> } />
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         </Routes>
       </main>
 

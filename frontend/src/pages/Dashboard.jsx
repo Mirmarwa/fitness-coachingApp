@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { authFetch, API_BASE_URL } from "../services/api";
 
 const API_URL = "http://127.0.0.1:8000";
 
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
+
+const COACH_SESSION_AMOUNT = 250;
 
 function Dashboard() {
   const [payments, setPayments] = useState([]);
@@ -15,19 +18,34 @@ function Dashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const paymentsResponse = await fetch("http://127.0.0.1:8000/api/payments/my/", {
-  headers: {
-    "Authorization": `Bearer ${localStorage.getItem("token")}`
-  }
-})
-        const paymentsData = await paymentsResponse.json();
-        const uniqueProgramIds = [...new Set(paymentsData.map((p) => p.program))];
+        const paymentsResponse = await authFetch(`${API_BASE_URL}/payments/my/`);
 
-        setPayments(paymentsData);
+        const paymentsData = await paymentsResponse.json();
+        if (!paymentsResponse.ok) {
+          throw new Error("Unable to load payments");
+        }
+
+        const safePayments = Array.isArray(paymentsData) ? paymentsData : [];
+        const programIds = safePayments
+          .map((payment) =>
+            typeof payment.program === "object"
+              ? payment.program?.id
+              : payment.program
+          )
+          .filter(Boolean);
+
+        setPayments(safePayments);
 
         const programEntries = await Promise.all(
-          uniqueProgramIds.map(async (programId) => {
-            const programResponse = await fetch(`${API_URL}/api/programs/${programId}/`);
+          programIds.map(async (programId) => {
+            const programResponse = await authFetch(
+              `${API_BASE_URL}/programs/${programId}/`
+            );
+
+            if (!programResponse.ok) {
+              return [programId, null];
+            }
+
             const programData = await programResponse.json();
             return [programId, programData];
           })
@@ -45,32 +63,47 @@ function Dashboard() {
   }, []);
 
   const purchasedPrograms = useMemo(() => {
-    const seenPrograms = new Set();
+    return payments.map((payment) => {
+      const programId =
+        typeof payment.program === "object"
+          ? payment.program?.id
+          : payment.program;
 
-    return payments.reduce((items, payment) => {
-      const program = programs[payment.program];
-      const programId = program?.id || payment.program;
-
-      if (seenPrograms.has(programId)) {
-        return items;
-      }
-
-      seenPrograms.add(programId);
-      items.push({ payment, program });
-      return items;
-    }, []);
+      return {
+        payment,
+        programId,
+        program:
+          typeof payment.program === "object"
+            ? payment.program
+            : programs[programId],
+      };
+    });
   }, [payments, programs]);
 
-  const totalPaid = useMemo(
-    () =>
-      purchasedPrograms.reduce(
-        (sum, item) => sum + Number(item.payment.amount || 0),
-        0
-      ),
-    [purchasedPrograms]
+  const totalPaid = payments.reduce(
+    (total, payment) => total + Number(payment.amount || 0),
+    0
   );
 
-  const formatPrice = (amount) => `${Number(amount || 0).toFixed(2)} DH`;
+  const coachSubscription = useMemo(() => {
+    const paid = localStorage.getItem("coach_session_paid") === "true";
+    const amount = Number(
+      localStorage.getItem("coach_session_amount") || COACH_SESSION_AMOUNT
+    );
+    const endDate = localStorage.getItem("coach_subscription_end");
+    const hasEndDate = Boolean(endDate);
+    const isActive = paid && (!hasEndDate || new Date(endDate) >= new Date());
+
+    return {
+      paid,
+      amount,
+      endDate,
+      isActive,
+      available: isActive,
+    };
+  }, []);
+
+  const totalWithCoach = totalPaid + (coachSubscription.paid ? coachSubscription.amount : 0);
 
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return PLACEHOLDER_IMAGE;
@@ -78,9 +111,21 @@ function Dashboard() {
     return `${API_URL}${image}`;
   };
 
+  const formatPrice = (amount) => `${Number(amount || 0).toFixed(2)} DH`;
+
+  const formatDate = (value) => {
+    if (!value) return "Non définie";
+
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(value));
+  };
+
   const getShortDescription = (description) => {
     if (!description) {
-      return "Un programme de coaching conçu pour progresser avec régularité.";
+      return "Un programme fitness clair, motivant et facile à suivre.";
     }
 
     return description.length > 115 ? `${description.slice(0, 115)}...` : description;
@@ -166,7 +211,7 @@ function Dashboard() {
 
           .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 18px;
             margin-bottom: 34px;
           }
@@ -196,6 +241,11 @@ function Dashboard() {
             color: #0f766e;
           }
 
+          .stat-card:nth-child(3) .stat-icon {
+            background: #f0fdf4;
+            color: #15803d;
+          }
+
           .stat-label {
             margin: 0 0 6px;
             color: #64748b;
@@ -218,6 +268,62 @@ function Dashboard() {
           .section-heading h2 {
             margin: 0;
             font-size: 25px;
+          }
+
+          .coach-subscription-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 34px;
+            padding: 24px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #0f766e, #16a34a);
+            color: white;
+            box-shadow: 0 24px 60px rgba(15, 118, 110, 0.2);
+          }
+
+          .coach-subscription-card h2 {
+            margin: 0 0 10px;
+            font-size: 25px;
+          }
+
+          .coach-subscription-card p {
+            margin: 0;
+            color: #dcfce7;
+            line-height: 1.6;
+          }
+
+          .coach-subscription-meta {
+            display: grid;
+            gap: 10px;
+            min-width: 230px;
+          }
+
+          .coach-subscription-meta span {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14);
+            font-weight: 850;
+          }
+
+          .coach-subscription-link {
+            display: inline-flex;
+            width: fit-content;
+            margin-top: 16px;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            border-radius: 14px;
+            background: white;
+            color: #0f766e;
+            text-decoration: none;
+            font-weight: 900;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
           }
 
           .program-grid {
@@ -336,6 +442,22 @@ function Dashboard() {
             text-align: center;
           }
 
+          .loading-spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 16px;
+            border: 4px solid #d1fae5;
+            border-top-color: #0f766e;
+            border-radius: 999px;
+            animation: dashboard-spin 850ms linear infinite;
+          }
+
+          @keyframes dashboard-spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
           .empty-state h2 {
             margin: 0 0 10px;
             color: #0f172a;
@@ -364,6 +486,14 @@ function Dashboard() {
 
             .stats-grid {
               grid-template-columns: 1fr;
+            }
+
+            .coach-subscription-card {
+              grid-template-columns: 1fr;
+            }
+
+            .coach-subscription-meta {
+              min-width: 0;
             }
           }
         `}
@@ -399,8 +529,43 @@ function Dashboard() {
             <div className="stat-icon">💳</div>
             <div>
               <p className="stat-label">Total payé</p>
-              <p className="stat-value">{formatPrice(totalPaid)}</p>
+              <p className="stat-value">{formatPrice(totalWithCoach)}</p>
             </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">👤</div>
+            <div>
+              <p className="stat-label">Coach</p>
+              <p className="stat-value">{coachSubscription.paid ? "Payé" : "Non payé"}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="coach-subscription-card">
+          <div>
+            <h2>Abonnement coach</h2>
+            <p>
+              Suivez l'état de votre séance coach premium, la disponibilité du
+              coach et la date de fin de l'abonnement.
+            </p>
+            <Link className="coach-subscription-link" to="/coach">
+              Gérer le coach
+            </Link>
+          </div>
+          <div className="coach-subscription-meta">
+            <span>
+              <strong>Coach payé</strong>
+              <em>{coachSubscription.paid ? "Oui" : "Non"}</em>
+            </span>
+            <span>
+              <strong>Disponible</strong>
+              <em>{coachSubscription.available ? "Oui" : "Non"}</em>
+            </span>
+            <span>
+              <strong>Fin</strong>
+              <em>{coachSubscription.paid ? formatDate(coachSubscription.endDate) : "-"}</em>
+            </span>
           </div>
         </section>
 
@@ -412,6 +577,7 @@ function Dashboard() {
           {loading ? (
             <div className="empty-state">
               <div>
+                <div className="loading-spinner" aria-hidden="true" />
                 <h2>Chargement des programmes...</h2>
                 <p>Vos programmes achetés sont en cours de préparation.</p>
               </div>
@@ -428,40 +594,52 @@ function Dashboard() {
             </div>
           ) : (
             <div className="program-grid">
-              {purchasedPrograms.map(({ payment, program }) => (
-                <article className="program-card" key={program?.id || payment.program}>
-                  <div className="program-image-box">
-                    <img
-                      className="program-image"
-                      src={getImageUrl(program?.image)}
-                      alt={program?.title || "Programme fitness"}
-                      onError={(event) => {
-                        event.currentTarget.src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
-                    <span className="paid-badge">✔️ Payé</span>
-                  </div>
+              {purchasedPrograms.map(({ payment, program, programId }, index) => {
+                const resolvedProgramId = program?.id || programId;
 
-                  <div className="program-content">
-                    <div className="program-topline">
-                      <h3 className="program-title">
-                        {program?.title || "Programme fitness"}
-                      </h3>
-                      <span className="program-price">{formatPrice(payment.amount)}</span>
+                return (
+                  <article
+                    className="program-card"
+                    key={payment.id || `${resolvedProgramId || "program"}-${index}`}
+                  >
+                    <div className="program-image-box">
+                      <img
+                        className="program-image"
+                        src={getImageUrl(program?.image)}
+                        alt={program?.title || "Programme fitness"}
+                        onError={(event) => {
+                          event.currentTarget.src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                      <span className="paid-badge">✔️ Payé</span>
                     </div>
 
-                    <p className="program-description">
-                      {getShortDescription(program?.description)}
-                    </p>
+                    <div className="program-content">
+                      <div className="program-topline">
+                        <h3 className="program-title">
+                          {program?.title || "Programme fitness"}
+                        </h3>
+                        <span className="program-price">
+                          {formatPrice(payment.amount)}
+                        </span>
+                      </div>
 
-                    {program?.id && (
-                      <Link className="program-button" to={`/program/${program.id}`}>
-                        Voir le programme
-                      </Link>
-                    )}
-                  </div>
-                </article>
-              ))}
+                      <p className="program-description">
+                        {getShortDescription(program?.description)}
+                      </p>
+
+                      {resolvedProgramId && (
+                        <Link
+                          className="program-button"
+                          to={`/program/${resolvedProgramId}`}
+                        >
+                          Voir le programme
+                        </Link>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
+import { authFetch, API_BASE_URL } from "../services/api";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -60,17 +61,15 @@ function ProgramDetail() {
   const [program, setProgram] = useState(null);
   const [paid, setPaid] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     const loadProgram = async () => {
       try {
-        const [programResponse, paymentResponse] = await Promise.all([
-          fetch(`${API_URL}/api/programs/${id}/`),
-          fetch(`${API_URL}/api/payments/check/${id}/`, {
-  headers: {
-    "Authorization": `Bearer ${localStorage.getItem("token")}`
-  }
-})
+        const [programResponse, paymentResponse, userPaymentsResponse] = await Promise.all([
+          authFetch(`${API_BASE_URL}/programs/${id}/full/`),
+          authFetch(`${API_BASE_URL}/payments/check/${id}/`),
+          authFetch(`${API_BASE_URL}/payments/my/`),
         ]);
 
         if (!programResponse.ok) {
@@ -78,14 +77,31 @@ function ProgramDetail() {
         }
 
         const programData = await programResponse.json();
-        const paymentData = await paymentResponse.json();
+        await paymentResponse.json().catch(() => ({}));
+        const userPaymentsData = userPaymentsResponse.ok
+          ? await userPaymentsResponse.json()
+          : [];
 
         if (!programData || Object.keys(programData).length === 0) {
           throw new Error("Empty program");
         }
 
+        const userPaid = Array.isArray(userPaymentsData)
+          ? userPaymentsData.some((payment) => {
+              const programId =
+                typeof payment.program === "object"
+                  ? payment.program?.id
+                  : payment.program;
+
+              return (
+                String(programId) === String(id) &&
+                (!payment.status || payment.status === "completed")
+              );
+            })
+          : false;
+
         setProgram(programData);
-        setPaid(Boolean(paymentData.paid));
+        setPaid(userPaid);
       } catch {
         const mockProgram =
           MOCK_PROGRAMS.find((item) => String(item.id) === String(id)) ||
@@ -93,6 +109,7 @@ function ProgramDetail() {
 
         setProgram(mockProgram);
         setPaid(false);
+        toast.error("Impossible de charger le programme complet");
       } finally {
         setLoading(false);
       }
@@ -115,31 +132,41 @@ function ProgramDetail() {
   };
 
   const handlePayment = async () => {
+    if (paid || paying) return;
+
+    setPaying(true);
+
     try {
-      const res = await fetch(`${API_URL}/api/payments/create/`, {
+      let response = await authFetch(`${API_BASE_URL}/payments/create/`, {
         method: "POST",
-        headers: {
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${localStorage.getItem("token")}`
-},
         body: JSON.stringify({
-          program: id,
-          amount: price,
+          program_id: id,
         }),
       });
+      let paymentData = await response.json().catch(() => ({}));
 
-      const data = await res.json();
+      if (!response.ok || paymentData.error) {
+        response = await authFetch(`${API_BASE_URL}/payments/create/`, {
+          method: "POST",
+          body: JSON.stringify({
+            program: id,
+            program_id: id,
+            amount: price,
+          }),
+        });
+        paymentData = await response.json().catch(() => ({}));
+      }
 
-      if (!res.ok) {
-        console.log("ERROR:", data);
-        throw new Error();
+      if (!response.ok || paymentData.error) {
+        throw new Error("Payment failed");
       }
 
       setPaid(true);
-      toast.success("Paiement effectue");
-    } catch (error) {
-      console.log("ERROR:", error);
-      toast.error("Erreur de paiement");
+      toast.success("Paiement validé, programme débloqué");
+    } catch {
+      toast.error("Impossible de finaliser le paiement");
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -181,10 +208,14 @@ function ProgramDetail() {
             <button
               type="button"
               onClick={handlePayment}
-              disabled={paid}
+              disabled={paid || paying}
               className={paid ? "buy-button paid" : "buy-button"}
             >
-              {paid ? "✔️ Déjà acheté" : "Acheter ce programme"}
+              {paid
+                ? "Déjà acheté ✅"
+                : paying
+                  ? "Paiement en cours..."
+                  : "Acheter ce programme"}
             </button>
           </div>
         </div>
