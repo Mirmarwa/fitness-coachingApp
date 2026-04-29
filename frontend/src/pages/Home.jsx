@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { authFetch } from "../services/api";
+import ProgramCard from "../components/ProgramCard";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -52,19 +53,6 @@ export default function Home() {
     () => (programs.length > 0 ? programs : MOCK_PROGRAMS),
     [programs]
   );
-
-  const getImageUrl = (image) => {
-    if (!image || typeof image !== "string") return FALLBACK_IMAGE;
-    if (image.startsWith("http")) return image;
-    return `${API_URL}${image}`;
-  };
-
-  const getPrice = (program) => Number(program.price || program.amount || 100);
-
-  const getShortDescription = (description) => {
-    if (!description) return "Un programme fitness clair, motivant et facile à suivre.";
-    return description.length > 105 ? `${description.slice(0, 105)}...` : description;
-  };
 
   return (
     <main style={styles.page}>
@@ -119,31 +107,7 @@ export default function Home() {
         ) : (
           <div style={styles.programGrid}>
             {visiblePrograms.map((program) => (
-              <article key={program.id} style={styles.programCard}>
-                <div style={styles.imageBox}>
-                  <img
-                    src={getImageUrl(program.image)}
-                    alt={program.title}
-                    style={styles.programImage}
-                    onError={(event) => {
-                      event.currentTarget.src = FALLBACK_IMAGE;
-                    }}
-                  />
-                </div>
-
-                <div style={styles.programContent}>
-                  <h3 style={styles.programTitle}>{program.title}</h3>
-                  <p style={styles.programDescription}>
-                    {getShortDescription(program.description)}
-                  </p>
-                  <div style={styles.programFooter}>
-                    <strong style={styles.price}>{getPrice(program).toFixed(2)} DH</strong>
-                    <Link to={`/program/${program.id}`} style={styles.cardButton}>
-                      Voir
-                    </Link>
-                  </div>
-                </div>
-              </article>
+              <ProgramCard key={program.id} program={program} />
             ))}
           </div>
         )}

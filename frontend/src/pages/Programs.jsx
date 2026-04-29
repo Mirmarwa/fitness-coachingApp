@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authFetch, API_BASE_URL } from "../services/api";
+import ProgramCard from "../components/ProgramCard";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -98,22 +99,6 @@ export default function Programs() {
     () => (programs.length > 0 ? programs : MOCK_PROGRAMS),
     [programs]
   );
-
-  const getImageUrl = (image) => {
-    if (!image || typeof image !== "string") return FALLBACK_IMAGE;
-    if (image.startsWith("http")) return image;
-    return `${API_URL}${image}`;
-  };
-
-  const getPrice = (program) => Number(program.price || program.amount || 100);
-
-  const getShortDescription = (description) => {
-    if (!description) {
-      return "Un programme fitness clair, motivant et facile a suivre.";
-    }
-
-    return description.length > 115 ? `${description.slice(0, 115)}...` : description;
-  };
 
   const handleGenerateProgram = async () => {
     setAiLoading(true);
@@ -544,35 +529,12 @@ export default function Programs() {
               );
 
               return (
-                <article className="program-card" key={program.id}>
-                  <div className="program-image-box">
-                    <img
-                      className="program-image"
-                      src={getImageUrl(program.image)}
-                      alt={program.title}
-                      onError={(event) => {
-                        event.currentTarget.src = FALLBACK_IMAGE;
-                      }}
-                    />
-                    {isPaid && <span className="paid-badge">✔️ Payé</span>}
-                  </div>
-
-                  <div className="program-content">
-                    <h3 className="program-title">{program.title}</h3>
-                    <p className="program-description">
-                      {getShortDescription(program.description)}
-                    </p>
-
-                    <div className="program-footer">
-                      <strong className="program-price">
-                        {getPrice(program).toFixed(2)} DH
-                      </strong>
-                      <Link className="program-button" to={`/program/${program.id}`}>
-                        Voir
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+                <ProgramCard
+                  key={program.id}
+                  program={program}
+                  isPaid={isPaid}
+                  showPaidBadge={true}
+                />
               );
             })}
           </section>

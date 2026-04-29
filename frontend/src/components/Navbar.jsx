@@ -197,9 +197,6 @@ export default function Navbar() {
         <NavLink to="/programmes" className="app-nav-link">
           Programmes
         </NavLink>
-        <NavLink to="/onboarding" className="app-nav-link">
-          Onboarding
-        </NavLink>
         {isLoggedIn && (
           <NavLink to="/dashboard" className="app-nav-link">
             Dashboard
@@ -211,6 +208,21 @@ export default function Navbar() {
         <NavLink to="/coach" className="app-nav-link">
           Coach
         </NavLink>
+        {isLoggedIn && (
+          <NavLink to="/profile" className="app-nav-link">
+            Profile
+          </NavLink>
+        )}
+        {isLoggedIn && (
+          <NavLink to="/messages" className="app-nav-link">
+            Messages
+          </NavLink>
+        )}
+        {isLoggedIn && (
+          <NavLink to="/appointments" className="app-nav-link">
+            Rendez-vous
+          </NavLink>
+        )}
 
         {isLoggedIn ? (
           <>

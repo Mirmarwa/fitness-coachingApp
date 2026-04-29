@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authFetch, API_BASE_URL } from "../services/api";
+import { authFetch, API_BASE_URL, getSubscriptionStatus } from "../services/api";
+import ProgramCard from "../components/ProgramCard";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -14,16 +15,54 @@ function Dashboard() {
   const [payments, setPayments] = useState([]);
   const [programs, setPrograms] = useState({});
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
-  useEffect(() => {
+useEffect(() => {
+    let isMounted = true;
+
+    // Fetch with timeout to prevent infinite loading
+    const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === "AbortError") throw new Error("timeout");
+        throw error;
+      }
+    };
+
     const loadDashboard = async () => {
       try {
-        const paymentsResponse = await authFetch(`${API_BASE_URL}/payments/my/`);
+        const token = localStorage.getItem("access");
+        const paymentsResponse = await fetchWithTimeout(
+          `${API_BASE_URL}/payments/my/`,
+          { headers: { Authorization: `Bearer ${token}` } },
+          8000
+        );
 
-        const paymentsData = await paymentsResponse.json();
+        if (!isMounted) return;
+
         if (!paymentsResponse.ok) {
+          if (paymentsResponse.status === 401) {
+            localStorage.removeItem("access");
+            window.location.href = "/login";
+            return;
+          }
           throw new Error("Unable to load payments");
         }
+
+        let paymentsData;
+        try {
+          paymentsData = await paymentsResponse.json();
+        } catch {
+          paymentsData = [];
+        }
+
+        if (!isMounted) return;
 
         const safePayments = Array.isArray(paymentsData) ? paymentsData : [];
         const programIds = safePayments
@@ -38,28 +77,61 @@ function Dashboard() {
 
         const programEntries = await Promise.all(
           programIds.map(async (programId) => {
-            const programResponse = await authFetch(
-              `${API_BASE_URL}/programs/${programId}/`
-            );
-
-            if (!programResponse.ok) {
+            try {
+              const programResponse = await fetchWithTimeout(
+                `${API_BASE_URL}/programs/${programId}/`,
+                { headers: { Authorization: `Bearer ${token}` } },
+                5000
+              );
+              if (!programResponse.ok) return [programId, null];
+              const programData = await programResponse.json();
+              return [programId, programData];
+            } catch {
               return [programId, null];
             }
-
-            const programData = await programResponse.json();
-            return [programId, programData];
           })
         );
 
-        setPrograms(Object.fromEntries(programEntries));
-      } catch {
-        toast.error("Impossible de charger le tableau de bord");
+        if (isMounted) {
+          setPrograms(Object.fromEntries(programEntries));
+        }
+
+        // Load subscription status
+        try {
+          const subscriptionData = await getSubscriptionStatus();
+          if (isMounted) {
+            setSubscription(subscriptionData);
+          }
+        } catch (error) {
+          console.error("Error loading subscription:", error);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Dashboard error:", error);
+          if (error.message !== "timeout") {
+            toast.error("Impossible de charger le tableau de bord");
+          }
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadDashboard();
+
+    // Fallback: ensure loading is always set to false after 15 seconds max
+    const fallbackTimeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 15000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(fallbackTimeout);
+    };
   }, []);
 
   const purchasedPrograms = useMemo(() => {
@@ -86,24 +158,35 @@ function Dashboard() {
   );
 
   const coachSubscription = useMemo(() => {
-    const paid = localStorage.getItem("coach_session_paid") === "true";
-    const amount = Number(
-      localStorage.getItem("coach_session_amount") || COACH_SESSION_AMOUNT
-    );
-    const endDate = localStorage.getItem("coach_subscription_end");
-    const hasEndDate = Boolean(endDate);
-    const isActive = paid && (!hasEndDate || new Date(endDate) >= new Date());
+    if (!subscription) {
+      return {
+        paid: false,
+        amount: COACH_SESSION_AMOUNT,
+        endDate: null,
+        isActive: false,
+        available: false,
+      };
+    }
 
     return {
-      paid,
-      amount,
-      endDate,
-      isActive,
-      available: isActive,
+      paid: true,
+      amount: subscription.amount || COACH_SESSION_AMOUNT,
+      endDate: subscription.end_date,
+      isActive: subscription.is_active,
+      available: subscription.is_active,
     };
-  }, []);
+  }, [subscription]);
 
   const totalWithCoach = totalPaid + (coachSubscription.paid ? coachSubscription.amount : 0);
+
+  const onboarding = useMemo(() => {
+    try {
+      const data = JSON.parse(localStorage.getItem("onboarding"));
+      return data || {};
+    } catch {
+      return {};
+    }
+  }, []);
 
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return PLACEHOLDER_IMAGE;
@@ -211,7 +294,7 @@ function Dashboard() {
 
           .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 18px;
             margin-bottom: 34px;
           }
@@ -538,6 +621,14 @@ function Dashboard() {
             <div>
               <p className="stat-label">Coach</p>
               <p className="stat-value">{coachSubscription.paid ? "Payé" : "Non payé"}</p>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">🎯</div>
+            <div>
+              <p className="stat-label">Objectif</p>
+              <p className="stat-value">{onboarding.goal || "Non défini"}</p>
             </div>
           </div>
         </section>

@@ -1,9 +1,11 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
-from .models import Program, Exercise, NutritionPlan
-from .serializers import ProgramSerializer
+from .models import Program, Exercise, NutritionPlan, Progress
+from .serializers import ProgramSerializer, ProgressSerializer
 from users.models import CustomUser
 
 
@@ -128,3 +130,44 @@ def generate_program(self, request):
     }
 
     return Response(data)
+
+
+class ProgressViewSet(viewsets.ModelViewSet):
+    serializer_class = ProgressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Progress.objects.filter(user=self.request.user).order_by('-date')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='add')
+    def add_progress(self, request):
+        program_id = request.data.get('program_id')
+        weight = request.data.get('weight')
+        notes = request.data.get('notes', '')
+
+        if not program_id or not weight:
+            return Response({'error': 'Program ID and weight are required'}, status=400)
+
+        try:
+            program = Program.objects.get(id=program_id)
+        except Program.DoesNotExist:
+            return Response({'error': 'Program not found'}, status=404)
+
+        progress = Progress.objects.create(
+            user=request.user,
+            program=program,
+            weight=weight,
+            notes=notes
+        )
+
+        serializer = self.get_serializer(progress)
+        return Response(serializer.data, status=201)
+
+    @action(detail=False, methods=['get'], url_path='my')
+    def my_progress(self, request):
+        progress = self.get_queryset()
+        serializer = self.get_serializer(progress, many=True)
+        return Response(serializer.data)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Program, Exercise, NutritionPlan
+from .models import Program, Exercise, NutritionPlan, Progress
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -21,3 +21,12 @@ class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = '__all__'
+
+
+class ProgressSerializer(serializers.ModelSerializer):
+    program_title = serializers.CharField(source='program.title', read_only=True)
+
+    class Meta:
+        model = Progress
+        fields = ['id', 'user', 'program', 'program_title', 'weight', 'notes', 'date']
+        read_only_fields = ['user', 'date']

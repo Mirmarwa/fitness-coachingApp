@@ -63,7 +63,9 @@ from rest_framework.decorators import permission_classes
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def check_payment(request, program_id):
+    user = request.user
     exists = Payment.objects.filter(
+        user=user,
         program_id=program_id,
         status='completed'
     ).exists()
