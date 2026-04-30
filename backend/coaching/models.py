@@ -7,11 +7,35 @@ User = get_user_model()
 
 
 class Coach(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='coach_profile'
+    )
     name = models.CharField(max_length=100)
     specialty = models.CharField(max_length=100)
     experience = models.IntegerField()
     description = models.TextField()
     price = models.FloatField()
+
+    def __str__(self):
+        if self.user:
+            return f"{self.user.username} - {self.specialty}"
+        return self.name
+
+
+class Client(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='client_profile'
+    )
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - Client"
 
 
 class Subscription(models.Model):
@@ -50,17 +74,25 @@ class Message(models.Model):
 
 class Appointment(models.Model):
     STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('booked', 'Booked'),
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
         ('completed', 'Completed'),
     ]
 
-    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_appointments')
+    client = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='client_appointments',
+        null=True,
+        blank=True
+    )
     coach = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coach_appointments')
     date = models.DateField()
     time = models.TimeField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='available')
     video_link = models.URLField(blank=True, null=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,4 +101,5 @@ class Appointment(models.Model):
         ordering = ['date', 'time']
 
     def __str__(self):
-        return f"{self.client.username} - {self.coach.username} ({self.date} {self.time})"
+        client_name = self.client.username if self.client else 'Disponible'
+        return f"{client_name} - {self.coach.username} ({self.date} {self.time})"

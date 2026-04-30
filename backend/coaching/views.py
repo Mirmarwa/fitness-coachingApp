@@ -79,6 +79,24 @@ class MessageViewSet(viewsets.ModelViewSet):
             models.Q(sender=self.request.user) | models.Q(receiver=self.request.user)
         ).order_by('-created_at')
 
+    @action(detail=False, methods=['get'], url_path='contacts')
+    def contacts(self, request):
+        messages = self.get_queryset().order_by('-created_at')
+        contacts_map = {}
+
+        for message in messages:
+            partner = message.sender if message.sender != request.user else message.receiver
+            if partner.id not in contacts_map:
+                contacts_map[partner.id] = {
+                    'id': partner.id,
+                    'name': partner.username,
+                    'lastMessage': message.content,
+                    'timestamp': message.created_at,
+                }
+
+        contacts = sorted(contacts_map.values(), key=lambda item: item['timestamp'], reverse=True)
+        return Response(contacts)
+
     @action(detail=False, methods=['get'], url_path='conversation/(?P<user_id>\d+)')
     def conversation(self, request, user_id=None):
         try:
@@ -125,40 +143,69 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'coach':
             return Appointment.objects.filter(coach=user)
-        else:
-            return Appointment.objects.filter(client=user)
+        return Appointment.objects.filter(client=user)
+
+    @action(detail=False, methods=['get'], url_path='my')
+    def my_appointments(self, request):
+        appointments = self.get_queryset()
+        serializer = self.get_serializer(appointments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='available')
+    def available_slots(self, request):
+        coach_id = request.query_params.get('coach_id')
+        queryset = Appointment.objects.filter(status='available')
+        if coach_id:
+            queryset = queryset.filter(coach_id=coach_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='create')
-    def create_appointment(self, request):
-        coach_id = request.data.get('coach_id')
+    def create_slot(self, request):
+        if request.user.role != 'coach':
+            return Response({'error': 'Seul un coach peut créer un créneau.'}, status=status.HTTP_403_FORBIDDEN)
+
         date = request.data.get('date')
         time = request.data.get('time')
         notes = request.data.get('notes', '')
 
-        try:
-            coach = User.objects.get(id=coach_id, role='coach')
-        except User.DoesNotExist:
-            return Response({'error': 'Coach not found'}, status=status.HTTP_404_NOT_FOUND)
+        if not date or not time:
+            return Response({'error': 'Date et heure sont requises.'}, status=status.HTTP_400_BAD_REQUEST)
 
         appointment = Appointment.objects.create(
-            client=request.user,
-            coach=coach,
+            coach=request.user,
             date=date,
             time=time,
             notes=notes,
-            status='pending'
+            status='available'
         )
 
         serializer = self.get_serializer(appointment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['post'], url_path='book')
+    def book_slot(self, request, pk=None):
+        appointment = self.get_object()
+
+        if request.user.role != 'client':
+            return Response({'error': 'Seul un client peut réserver un créneau.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if appointment.status != 'available':
+            return Response({'error': 'Ce créneau n’est pas disponible.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        appointment.client = request.user
+        appointment.status = 'booked'
+        appointment.save()
+
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['patch'], url_path='confirm')
     def confirm_appointment(self, request, pk=None):
         appointment = self.get_object()
 
-        # Only coach can confirm
         if request.user != appointment.coach:
-            return Response({'error': 'Only the coach can confirm this appointment'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'Seul le coach peut confirmer ce rendez-vous.'}, status=status.HTTP_403_FORBIDDEN)
 
         appointment.status = 'confirmed'
         appointment.save()

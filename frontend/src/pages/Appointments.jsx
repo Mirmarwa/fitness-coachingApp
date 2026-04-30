@@ -1,79 +1,170 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { createAppointment, getMyAppointments, confirmAppointment } from "../services/api";
+import {
+  createAppointmentSlot,
+  getAvailableSlots,
+  getMyAppointments,
+  bookAppointmentSlot,
+  confirmAppointment,
+  getUserById,
+} from "../services/api";
+
+const getUserIdFromToken = () => {
+  const token = localStorage.getItem("access");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_id;
+  } catch {
+    return null;
+  }
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case "pending":
+      return "#f59e0b";
+    case "confirmed":
+      return "#10b981";
+    case "booked":
+      return "#3b82f6";
+    case "completed":
+      return "#6b7280";
+    case "cancelled":
+      return "#ef4444";
+    default:
+      return "#6b7280";
+  }
+};
+
+const getStatusText = (status) => {
+  switch (status) {
+    case "pending":
+      return "En attente";
+    case "confirmed":
+      return "Confirmé";
+    case "booked":
+      return "Réservé";
+    case "completed":
+      return "Terminé";
+    case "cancelled":
+      return "Annulé";
+    default:
+      return status;
+  }
+};
 
 export default function Appointments() {
+  const [userRole, setUserRole] = useState("");
   const [appointments, setAppointments] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState({
-    coachId: "",
-    date: "",
-    time: "",
-    notes: ""
-  });
+  const [formData, setFormData] = useState({ date: "", time: "", notes: "" });
 
   useEffect(() => {
-    loadAppointments();
+    loadPage();
   }, []);
 
-  const loadAppointments = async () => {
+  const fetchUserRole = async () => {
+    const userId = getUserIdFromToken();
+    if (!userId) return null;
+
     try {
-      const data = await getMyAppointments();
-      setAppointments(data);
+      const user = await getUserById(userId);
+      return user.role;
     } catch (error) {
+      console.error("Unable to load user role:", error);
+      return null;
+    }
+  };
+
+  const loadPage = async () => {
+    setLoading(true);
+
+    try {
+      const role = (await fetchUserRole()) || "client";
+      setUserRole(role);
+
+      const appointmentsData = await getMyAppointments();
+      setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
+
+      if (role === "client") {
+        loadAvailableSlots();
+      }
+    } catch (error) {
+      console.error("Appointments load failed:", error);
       toast.error("Erreur lors du chargement des rendez-vous");
+      setAppointments([]);
+      setAvailableSlots([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateAppointment = async (e) => {
+  const loadAvailableSlots = async () => {
+    try {
+      const slots = await getAvailableSlots();
+      setAvailableSlots(Array.isArray(slots) ? slots : []);
+    } catch (error) {
+      console.error("Available slots load failed:", error);
+      toast.error("Impossible de charger les créneaux disponibles");
+      setAvailableSlots([]);
+    }
+  };
+
+  const loadAppointments = async () => {
+    try {
+      const data = await getMyAppointments();
+      setAppointments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Appointments load failed:", error);
+      toast.error("Erreur lors du chargement des rendez-vous");
+      setAppointments([]);
+    }
+  };
+
+  const handleCreateSlot = async (e) => {
     e.preventDefault();
 
+    if (!formData.date || !formData.time) {
+      toast.error("La date et l'heure sont requises.");
+      return;
+    }
+
     try {
-      await createAppointment(
-        parseInt(formData.coachId),
-        formData.date,
-        formData.time,
-        formData.notes
-      );
-      toast.success("Rendez-vous créé avec succès!");
+      await createAppointmentSlot(formData.date, formData.time, formData.notes);
+      toast.success("Créneau créé avec succès !");
+      setFormData({ date: "", time: "", notes: "" });
       setShowCreateForm(false);
-      setFormData({ coachId: "", date: "", time: "", notes: "" });
       loadAppointments();
     } catch (error) {
-      toast.error("Erreur lors de la création du rendez-vous");
+      console.error("Create slot failed:", error);
+      toast.error(error.message || "Erreur lors de la création du créneau");
+    }
+  };
+
+  const handleBookSlot = async (appointmentId) => {
+    try {
+      await bookAppointmentSlot(appointmentId);
+      toast.success("Rendez-vous réservé avec succès !");
+      loadAvailableSlots();
+      loadAppointments();
+    } catch (error) {
+      console.error("Book slot failed:", error);
+      toast.error(error.message || "Impossible de réserver ce créneau");
     }
   };
 
   const handleConfirmAppointment = async (appointmentId) => {
     try {
       await confirmAppointment(appointmentId);
-      toast.success("Rendez-vous confirmé!");
+      toast.success("Rendez-vous confirmé !");
       loadAppointments();
     } catch (error) {
+      console.error("Confirm appointment failed:", error);
       toast.error("Erreur lors de la confirmation");
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return '#f59e0b';
-      case 'confirmed': return '#10b981';
-      case 'completed': return '#6b7280';
-      case 'cancelled': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'confirmed': return 'Confirmé';
-      case 'completed': return 'Terminé';
-      case 'cancelled': return 'Annulé';
-      default: return status;
     }
   };
 
@@ -97,7 +188,8 @@ export default function Appointments() {
           .appointments-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            gap: 20px;
             margin-bottom: 32px;
           }
 
@@ -105,6 +197,14 @@ export default function Appointments() {
             margin: 0;
             font-size: clamp(34px, 6vw, 54px);
             line-height: 1;
+          }
+
+          .appointments-description {
+            margin: 8px 0 0;
+            color: #475569;
+            font-size: 16px;
+            max-width: 640px;
+            line-height: 1.6;
           }
 
           .create-button {
@@ -125,12 +225,23 @@ export default function Appointments() {
             box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22);
           }
 
+          .section {
+            margin-bottom: 32px;
+          }
+
+          .section-title {
+            margin: 0 0 20px;
+            font-size: 26px;
+            font-weight: 900;
+          }
+
           .appointments-grid {
             display: grid;
             gap: 24px;
           }
 
-          .appointment-card {
+          .appointment-card,
+          .slot-card {
             padding: 24px;
             border-radius: 22px;
             background: white;
@@ -158,16 +269,19 @@ export default function Appointments() {
             font-size: 13px;
             font-weight: 900;
             text-transform: uppercase;
+            color: white;
           }
 
-          .appointment-details {
+          .appointment-details,
+          .slot-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 20px;
           }
 
-          .appointment-detail {
+          .appointment-detail,
+          .slot-detail {
             display: flex;
             flex-direction: column;
             gap: 4px;
@@ -180,7 +294,8 @@ export default function Appointments() {
             color: #64748b;
           }
 
-          .appointment-value {
+          .appointment-value,
+          .slot-value {
             font-size: 16px;
             font-weight: 700;
             color: #0f172a;
@@ -195,12 +310,15 @@ export default function Appointments() {
             font-style: italic;
           }
 
-          .appointment-actions {
+          .appointment-actions,
+          .slot-actions {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
           }
 
-          .action-button {
+          .action-button,
+          .reserve-button {
             padding: 10px 20px;
             border: 0;
             border-radius: 12px;
@@ -215,19 +333,18 @@ export default function Appointments() {
             color: white;
           }
 
-          .confirm-button:hover {
+          .confirm-button:hover,
+          .reserve-button:hover {
             transform: translateY(-2px);
-            background: #059669;
           }
 
-          .cancel-button {
-            background: #ef4444;
+          .reserve-button {
+            background: #0f766e;
             color: white;
           }
 
-          .cancel-button:hover {
-            transform: translateY(-2px);
-            background: #dc2626;
+          .reserve-button:hover {
+            background: #115e59;
           }
 
           .create-form {
@@ -331,8 +448,8 @@ export default function Appointments() {
           .empty-state {
             display: grid;
             place-items: center;
-            min-height: 300px;
-            padding: 48px 24px;
+            min-height: 240px;
+            padding: 32px 24px;
             border: 2px dashed rgba(15, 118, 110, 0.2);
             border-radius: 22px;
             text-align: center;
@@ -367,7 +484,8 @@ export default function Appointments() {
               grid-template-columns: 1fr;
             }
 
-            .appointment-details {
+            .appointment-details,
+            .slot-details {
               grid-template-columns: 1fr;
             }
           }
@@ -376,169 +494,224 @@ export default function Appointments() {
 
       <div className="appointments-container">
         <header className="appointments-header">
-          <h1 className="appointments-title">Mes Rendez-vous</h1>
-          <button
-            className="create-button"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-          >
-            {showCreateForm ? 'Annuler' : 'Nouveau Rendez-vous'}
-          </button>
+          <div>
+            <h1 className="appointments-title">
+              {userRole === "coach" ? "Mes rendez-vous" : "Réservez un créneau"}
+            </h1>
+            <p className="appointments-description">
+              {userRole === "coach"
+                ? "Créez des créneaux disponibles et suivez les réservations de vos clients."
+                : "Choisissez un créneau disponible et réservez votre séance avec un coach."}
+            </p>
+          </div>
+
+          {userRole === "coach" && (
+            <button
+              className="create-button"
+              onClick={() => setShowCreateForm((prev) => !prev)}
+            >
+              {showCreateForm ? "Annuler" : "Nouveau créneau"}
+            </button>
+          )}
         </header>
 
-        {showCreateForm && (
-          <form className="create-form" onSubmit={handleCreateAppointment}>
-            <h2 className="form-title">Créer un nouveau rendez-vous</h2>
+        {userRole === "coach" && showCreateForm && (
+          <form className="create-form" onSubmit={handleCreateSlot}>
+            <h2 className="form-title">Créer un créneau disponible</h2>
 
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label" htmlFor="coachId">Coach</label>
-                <select
-                  id="coachId"
-                  className="form-select"
-                  value={formData.coachId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, coachId: e.target.value }))}
-                  required
-                >
-                  <option value="">Sélectionnez un coach</option>
-                  <option value="1">Coach Ahmed</option>
-                  <option value="2">Coach Fatima</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="date">Date</label>
+                <label className="form-label" htmlFor="date">
+                  Date
+                </label>
                 <input
                   id="date"
                   type="date"
                   className="form-input"
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="time">Heure</label>
+                <label className="form-label" htmlFor="time">
+                  Heure
+                </label>
                 <input
                   id="time"
                   type="time"
                   className="form-input"
                   value={formData.time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
                   required
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="notes">Notes (optionnel)</label>
+              <label className="form-label" htmlFor="notes">
+                Notes (optionnel)
+              </label>
               <textarea
                 id="notes"
                 className="form-textarea"
                 value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Ajoutez des détails sur votre rendez-vous..."
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                placeholder="Ajoutez des informations sur votre séance..."
               />
             </div>
 
             <div className="form-actions">
-              <button
-                type="button"
-                className="cancel-form-button"
-                onClick={() => setShowCreateForm(false)}
-              >
+              <button type="button" className="cancel-form-button" onClick={() => setShowCreateForm(false)}>
                 Annuler
               </button>
               <button type="submit" className="submit-button">
-                Créer le rendez-vous
+                Créer le créneau
               </button>
             </div>
           </form>
         )}
 
-        {loading ? (
-          <div className="loading">Chargement des rendez-vous...</div>
-        ) : appointments.length === 0 ? (
-          <div className="empty-state">
-            <div>
-              <h2>Vous n'avez aucun rendez-vous</h2>
-              <p>Créez votre premier rendez-vous avec un coach pour commencer votre suivi personnalisé.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="appointments-grid">
-            {appointments.map((appointment) => (
-              <div key={appointment.id} className="appointment-card">
-                <div className="appointment-header">
-                  <div>
-                    <h3 className="appointment-coach">{appointment.coach_name}</h3>
-                  </div>
-                  <span
-                    className="appointment-status"
-                    style={{ backgroundColor: getStatusColor(appointment.status) }}
-                  >
-                    {getStatusText(appointment.status)}
-                  </span>
-                </div>
+        {userRole === "client" && (
+          <section className="section">
+            <h2 className="section-title">Créneaux disponibles</h2>
 
-                <div className="appointment-details">
-                  <div className="appointment-detail">
-                    <span className="appointment-label">Date</span>
-                    <span className="appointment-value">
-                      {new Date(appointment.date).toLocaleDateString('fr-FR')}
+            {loading ? (
+              <div className="loading">Chargement des créneaux...</div>
+            ) : availableSlots.length === 0 ? (
+              <div className="empty-state">
+                <div>
+                  <h2>Aucun créneau disponible</h2>
+                  <p>Patientez pendant que les coachs ajoutent de nouveaux créneaux.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="appointments-grid">
+                {availableSlots.map((slot) => (
+                  <div key={slot.id} className="slot-card">
+                    <div className="appointment-header">
+                      <div>
+                        <h3 className="appointment-coach">{slot.coach_name}</h3>
+                      </div>
+                      <span className="appointment-status" style={{ backgroundColor: getStatusColor(slot.status) }}>
+                        {getStatusText(slot.status)}
+                      </span>
+                    </div>
+
+                    <div className="slot-details">
+                      <div className="slot-detail">
+                        <span className="appointment-label">Date</span>
+                        <span className="slot-value">
+                          {new Date(slot.date).toLocaleDateString("fr-FR")}
+                        </span>
+                      </div>
+
+                      <div className="slot-detail">
+                        <span className="appointment-label">Heure</span>
+                        <span className="slot-value">{slot.time}</span>
+                      </div>
+                    </div>
+
+                    {slot.notes && <p className="appointment-notes">"{slot.notes}"</p>}
+
+                    <div className="slot-actions">
+                      <button className="reserve-button" onClick={() => handleBookSlot(slot.id)}>
+                        Réserver
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        <section className="section">
+          <h2 className="section-title">{userRole === "coach" ? "Vos rendez-vous" : "Mes rendez-vous"}</h2>
+
+          {loading ? (
+            <div className="loading">Chargement des rendez-vous...</div>
+          ) : appointments.length === 0 ? (
+            <div className="empty-state">
+              <div>
+                <h2>Aucun rendez-vous</h2>
+                <p>
+                  {userRole === "coach"
+                    ? "Vos rendez-vous apparaîtront ici lorsque des clients réserveront un créneau."
+                    : "Réservez un créneau pour voir votre rendez-vous ici."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="appointments-grid">
+              {appointments.map((appointment) => (
+                <div key={appointment.id} className="appointment-card">
+                  <div className="appointment-header">
+                    <div>
+                      <h3 className="appointment-coach">
+                        {userRole === "coach" ? appointment.client_name || "Client" : appointment.coach_name}
+                      </h3>
+                    </div>
+                    <span className="appointment-status" style={{ backgroundColor: getStatusColor(appointment.status) }}>
+                      {getStatusText(appointment.status)}
                     </span>
                   </div>
 
-                  <div className="appointment-detail">
-                    <span className="appointment-label">Heure</span>
-                    <span className="appointment-value">{appointment.time}</span>
+                  <div className="appointment-details">
+                    <div className="appointment-detail">
+                      <span className="appointment-label">Date</span>
+                      <span className="appointment-value">
+                        {new Date(appointment.date).toLocaleDateString("fr-FR")}
+                      </span>
+                    </div>
+
+                    <div className="appointment-detail">
+                      <span className="appointment-label">Heure</span>
+                      <span className="appointment-value">{appointment.time}</span>
+                    </div>
+
+                    {appointment.video_link && (
+                      <div className="appointment-detail">
+                        <span className="appointment-label">Lien vidéo</span>
+                        <a
+                          href={appointment.video_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="appointment-value"
+                          style={{ color: "#0f766e", textDecoration: "underline" }}
+                        >
+                          Rejoindre la réunion
+                        </a>
+                      </div>
+                    )}
                   </div>
 
-                  {appointment.video_link && (
-                    <div className="appointment-detail">
-                      <span className="appointment-label">Lien vidéo</span>
+                  {appointment.notes && <p className="appointment-notes">"{appointment.notes}"</p>}
+
+                  <div className="appointment-actions">
+                    {userRole === "coach" && appointment.status === "pending" && (
+                      <button className="action-button confirm-button" onClick={() => handleConfirmAppointment(appointment.id)}>
+                        Confirmer
+                      </button>
+                    )}
+
+                    {appointment.status === "confirmed" && appointment.video_link && (
                       <a
                         href={appointment.video_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="appointment-value"
-                        style={{ color: '#0f766e', textDecoration: 'underline' }}
+                        className="action-button confirm-button"
                       >
-                        Rejoindre la réunion
+                        Rejoindre
                       </a>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-
-                {appointment.notes && (
-                  <p className="appointment-notes">"{appointment.notes}"</p>
-                )}
-
-                <div className="appointment-actions">
-                  {appointment.status === 'pending' && (
-                    <button
-                      className="action-button confirm-button"
-                      onClick={() => handleConfirmAppointment(appointment.id)}
-                    >
-                      Confirmer
-                    </button>
-                  )}
-
-                  {appointment.status === 'confirmed' && appointment.video_link && (
-                    <a
-                      href={appointment.video_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="action-button confirm-button"
-                    >
-                      Rejoindre
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );

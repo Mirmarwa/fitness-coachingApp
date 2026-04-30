@@ -234,9 +234,14 @@ export default function Navbar() {
             </button>
           </>
         ) : (
-          <NavLink to="/login" className="app-nav-link">
-            Login
-          </NavLink>
+          <>
+            <NavLink to="/login" className="app-nav-link">
+              Login
+            </NavLink>
+            <NavLink to="/register" className="app-nav-link">
+              Register
+            </NavLink>
+          </>
         )}
       </div>
     </nav>

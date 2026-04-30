@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { addProgress, getMyProgress } from "../services/api";
+import { addProgress, getMyProgress, getPrograms } from "../services/api";
 
 export default function Progress() {
   const [progressData, setProgressData] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -14,12 +15,25 @@ export default function Progress() {
 
   useEffect(() => {
     loadProgress();
+    loadPrograms();
   }, []);
+
+  const loadPrograms = async () => {
+    try {
+      const data = await getPrograms();
+      setPrograms(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0 && !formData.programId) {
+        setFormData((prev) => ({ ...prev, programId: data[0].id }));
+      }
+    } catch (error) {
+      toast.error("Impossible de charger les programmes");
+    }
+  };
 
   const loadProgress = async () => {
     try {
       const data = await getMyProgress();
-      setProgressData(data);
+      setProgressData(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Erreur lors du chargement des progrès");
     } finally {
@@ -30,18 +44,24 @@ export default function Progress() {
   const handleAddProgress = async (e) => {
     e.preventDefault();
 
+    if (!formData.programId || !formData.weight) {
+      toast.error("Veuillez choisir un programme et indiquer votre poids.");
+      return;
+    }
+
     try {
       await addProgress(
-        parseInt(formData.programId),
+        parseInt(formData.programId, 10),
         parseFloat(formData.weight),
         formData.notes
       );
       toast.success("Progression ajoutée avec succès!");
       setShowForm(false);
-      setFormData({ programId: "", weight: "", notes: "" });
+      setFormData((prev) => ({ ...prev, weight: "", notes: "" }));
       loadProgress();
     } catch (error) {
       toast.error("Erreur lors de l'ajout de la progression");
+      console.error(error);
     }
   };
 
@@ -348,8 +368,11 @@ export default function Progress() {
                   required
                 >
                   <option value="">Sélectionnez un programme</option>
-                  <option value="1">Programme Perte de Poids</option>
-                  <option value="2">Programme Prise de Masse</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.title}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -403,20 +426,30 @@ export default function Progress() {
             </p>
           </div>
         ) : (
-          <div className="progress-card">
-            {progressData.map((item, index) => (
-              <div key={item.id || index} className="progress-item">
-                <div className="progress-info">
-                  <div className="progress-day">Programme #{item.program}</div>
-                  <div className="progress-date">
-                    {new Date(item.created_at).toLocaleDateString('fr-FR')}
+          <>
+            <div className="progress-card">
+              <h2>Dernière mise à jour</h2>
+              <p>
+                {progressData[0]?.date
+                  ? `Dernière mesure enregistrée le ${new Date(progressData[0].date).toLocaleDateString('fr-FR')}`
+                  : "Aucune mise à jour disponible"}
+              </p>
+            </div>
+            <div className="progress-card">
+              {progressData.map((item, index) => (
+                <div key={item.id || index} className="progress-item">
+                  <div className="progress-info">
+                    <div className="progress-day">{item.program_title || `Programme #${item.program}`}</div>
+                    <div className="progress-date">
+                      {item.date ? new Date(item.date).toLocaleDateString('fr-FR') : "Date inconnue"}
+                    </div>
+                    {item.notes && <div className="progress-note">{item.notes}</div>}
                   </div>
-                  {item.notes && <div className="progress-note">{item.notes}</div>}
+                  <div className="progress-weight">{item.weight} kg</div>
                 </div>
-                <div className="progress-weight">{item.weight} kg</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </main>

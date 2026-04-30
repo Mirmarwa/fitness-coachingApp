@@ -130,8 +130,14 @@ function generateProgram(userData) {
 export default function Onboarding() {
   const [formData, setFormData] = useState(initialFormData);
   const [result, setResult] = useState(() => {
-    const saved = localStorage.getItem("onboarding_program");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("onboarding") || localStorage.getItem("onboarding_program");
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      return parsed?.program ? parsed.program : parsed;
+    } catch {
+      return null;
+    }
   });
 
   const completion = useMemo(() => {
@@ -160,10 +166,14 @@ export default function Onboarding() {
     const generatedProgram = generateProgram(formData);
     setResult(generatedProgram);
 
-    if (localStorage.getItem("access")) {
-      localStorage.setItem("onboarding_program", JSON.stringify(generatedProgram));
-      localStorage.setItem("onboarding_data", JSON.stringify(formData));
-    }
+    const storedValue = {
+      program: generatedProgram,
+      data: formData,
+    };
+
+    localStorage.setItem("onboarding", JSON.stringify(storedValue));
+    localStorage.setItem("onboarding_program", JSON.stringify(generatedProgram));
+    localStorage.setItem("onboarding_data", JSON.stringify(formData));
 
     toast.success("Programme personnalisé généré");
   };

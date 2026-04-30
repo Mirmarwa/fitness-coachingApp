@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Login() {
@@ -100,6 +100,13 @@ export default function Login() {
             {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
+
+        <p style={styles.bottomText}>
+          Vous n'avez pas de compte ?{" "}
+          <Link to="/register" style={styles.link}>
+            Register
+          </Link>
+        </p>
       </section>
     </main>
   );
@@ -191,5 +198,11 @@ const styles = {
     opacity: 0.75,
     cursor: "not-allowed",
     boxShadow: "none",
+  },
+  bottomText: {
+    marginTop: "18px",
+    textAlign: "center",
+    color: "#334155",
+    fontSize: "14px",
   },
 };

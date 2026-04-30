@@ -1,31 +1,49 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { getConversation, sendMessage } from "../services/api";
+import { getContacts, getConversation, sendMessage } from "../services/api";
+
+const getUserIdFromToken = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1])).user_id;
+  } catch {
+    return null;
+  }
+};
 
 export default function Messages() {
-  const [conversations, setConversations] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
-    // For now, we'll show a placeholder since we need to get coaches/users
-    // In a real app, you'd fetch users you can message
-    setConversations([
-      { id: 1, name: "Coach Ahmed", lastMessage: "Comment se passe votre entraînement?", timestamp: "2024-01-15" },
-      { id: 2, name: "Coach Fatima", lastMessage: "N'oubliez pas votre séance d'aujourd'hui", timestamp: "2024-01-14" },
-    ]);
-    setLoading(false);
+    const token = localStorage.getItem("access");
+    setCurrentUserId(token ? getUserIdFromToken(token) : null);
+    loadContacts();
   }, []);
+
+  const loadContacts = async () => {
+    try {
+      const data = await getContacts();
+      setContacts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error("Impossible de charger les conversations");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectConversation = async (user) => {
     setSelectedUser(user);
     try {
       const data = await getConversation(user.id);
-      setMessages(data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Erreur lors du chargement des messages");
+      console.error(error);
     }
   };
 
@@ -33,18 +51,25 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedUser) return;
 
     try {
-      await sendMessage(selectedUser.id, newMessage.trim());
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        content: newMessage.trim(),
-        sender_name: "Vous",
-        timestamp: new Date().toISOString(),
-        is_sender: true
-      }]);
+      const response = await sendMessage(selectedUser.id, newMessage.trim());
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: response.id,
+          sender: response.sender,
+          receiver: response.receiver,
+          sender_name: response.sender_name || "Vous",
+          receiver_name: response.receiver_name,
+          content: response.content,
+          created_at: response.created_at,
+          is_read: response.is_read,
+        },
+      ]);
       setNewMessage("");
       toast.success("Message envoyé!");
     } catch (error) {
       toast.error("Erreur lors de l'envoi du message");
+      console.error(error);
     }
   };
 
@@ -274,7 +299,7 @@ export default function Messages() {
                 <h2>Chargement...</h2>
               </div>
             </div>
-          ) : conversations.length === 0 ? (
+          ) : contacts.length === 0 ? (
             <div className="empty-state">
               <div>
                 <h2>Aucun message</h2>
@@ -282,15 +307,15 @@ export default function Messages() {
               </div>
             </div>
           ) : (
-            conversations.map((conversation) => (
+            contacts.map((contact) => (
               <div
-                key={conversation.id}
-                className={`conversation-item ${selectedUser?.id === conversation.id ? 'active' : ''}`}
-                onClick={() => handleSelectConversation(conversation)}
+                key={contact.id}
+                className={`conversation-item ${selectedUser?.id === contact.id ? 'active' : ''}`}
+                onClick={() => handleSelectConversation(contact)}
               >
-                <h3 className="conversation-name">{conversation.name}</h3>
-                <p className="conversation-last-message">{conversation.lastMessage}</p>
-                <p className="conversation-timestamp">{conversation.timestamp}</p>
+                <h3 className="conversation-name">{contact.name}</h3>
+                <p className="conversation-last-message">{contact.lastMessage}</p>
+                <p className="conversation-timestamp">{new Date(contact.timestamp).toLocaleDateString('fr-FR')}</p>
               </div>
             ))
           )}
@@ -312,17 +337,21 @@ export default function Messages() {
                     </div>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`message ${message.is_sender ? 'sent' : 'received'}`}
-                    >
-                      {!message.is_sender && (
-                        <div className="message-sender">{message.sender_name}</div>
-                      )}
-                      {message.content}
-                    </div>
-                  ))
+                  messages.map((message) => {
+                    const isSender = currentUserId && message.sender === currentUserId;
+
+                    return (
+                      <div
+                        key={message.id}
+                        className={`message ${isSender ? 'sent' : 'received'}`}
+                      >
+                        {!isSender && (
+                          <div className="message-sender">{message.sender_name}</div>
+                        )}
+                        {message.content}
+                      </div>
+                    );
+                  })
                 )}
               </div>
 

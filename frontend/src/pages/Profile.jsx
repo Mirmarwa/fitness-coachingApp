@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getProfile, updateProfile } from "../services/api";
 
+const goalOptions = [
+  { value: "weight_loss", label: "Perte de poids" },
+  { value: "muscle_gain", label: "Prise de masse" },
+  { value: "maintenance", label: "Maintien" },
+  { value: "general_fitness", label: "Fitness général" },
+];
+
 export default function Profile() {
   const [profile, setProfile] = useState({
     username: "",
@@ -227,10 +234,12 @@ export default function Profile() {
               value={profile.goal}
               onChange={(e) => handleChange("goal", e.target.value)}
             >
-              <option value="Prise de masse">Prise de masse</option>
-              <option value="Perte de poids">Perte de poids</option>
-              <option value="Maintien">Maintien</option>
-              <option value="Débutant">Débutant</option>
+              <option value="">Sélectionnez votre objectif</option>
+              {goalOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 

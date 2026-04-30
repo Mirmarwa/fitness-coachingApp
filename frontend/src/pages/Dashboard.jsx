@@ -181,8 +181,19 @@ useEffect(() => {
 
   const onboarding = useMemo(() => {
     try {
-      const data = JSON.parse(localStorage.getItem("onboarding"));
-      return data || {};
+      const raw = localStorage.getItem("onboarding") || localStorage.getItem("onboarding_program");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (parsed?.data) {
+        return {
+          ...parsed.data,
+          program: parsed.program,
+        };
+      }
+      if (parsed?.title || parsed?.description) {
+        return parsed;
+      }
+      return parsed;
     } catch {
       return {};
     }
@@ -192,6 +203,20 @@ useEffect(() => {
     if (!image || typeof image !== "string") return PLACEHOLDER_IMAGE;
     if (image.startsWith("http")) return image;
     return `${API_URL}${image}`;
+  };
+
+  const formatGoal = (goal) => {
+    if (!goal) return "Non défini";
+    const goalMap = {
+      "lose weight": "Perte de poids",
+      "gain muscle": "Prise de muscle",
+      "maintain fitness": "Maintien",
+      "weight_loss": "Perte de poids",
+      "muscle_gain": "Prise de muscle",
+      "maintenance": "Maintien",
+      "general_fitness": "Fitness général",
+    };
+    return goalMap[goal] || goal;
   };
 
   const formatPrice = (amount) => `${Number(amount || 0).toFixed(2)} DH`;
@@ -628,7 +653,7 @@ useEffect(() => {
             <div className="stat-icon">🎯</div>
             <div>
               <p className="stat-label">Objectif</p>
-              <p className="stat-value">{onboarding.goal || "Non défini"}</p>
+              <p className="stat-value">{formatGoal(onboarding.goal)}</p>
             </div>
           </div>
         </section>

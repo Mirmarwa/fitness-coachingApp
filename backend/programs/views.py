@@ -120,16 +120,16 @@ class ProgramViewSet(viewsets.ModelViewSet):
             "exercises": program.exercises.all().values(),
             "nutrition": program.nutrition_plans.all().values()
         })
-@action(detail=False, methods=['get'], url_path='generate-program')
-def generate_program(self, request):
 
-    data = {
-        "program": "Muscle Gain",
-        "exercises": ["Squat", "Bench Press"],
-        "nutrition": "3000 kcal"
-    }
+    @action(detail=False, methods=['get'], url_path='generate-program')
+    def generate_program(self, request):
+        data = {
+            "program": "Muscle Gain",
+            "exercises": ["Squat", "Bench Press"],
+            "nutrition": "3000 kcal"
+        }
 
-    return Response(data)
+        return Response(data)
 
 
 class ProgressViewSet(viewsets.ModelViewSet):

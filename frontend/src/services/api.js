@@ -27,80 +27,130 @@ export const authFetch = async (url, options = {}) => {
   return response;
 };
 
+export const authFetchJson = async (url, options = {}) => {
+  const response = await authFetch(url, options);
+  let json;
+
+  try {
+    json = await response.json();
+  } catch {
+    json = null;
+  }
+
+  if (!response.ok) {
+    const errorMessage = json?.detail || json?.error || response.statusText || "Erreur réseau";
+    const err = new Error(errorMessage);
+    err.status = response.status;
+    err.body = json;
+    throw err;
+  }
+
+  return json;
+};
+
 // Subscription APIs
 export const subscribeToCoach = async (coachId, durationDays = 30) => {
-  const response = await authFetch(`${API_BASE_URL}/subscriptions/subscribe/`, {
+  return authFetchJson(`${API_BASE_URL}/subscriptions/subscribe/`, {
     method: 'POST',
     body: JSON.stringify({ coach_id: coachId, duration_days: durationDays }),
   });
-  return response.json();
 };
 
 export const getSubscriptionStatus = async () => {
-  const response = await authFetch(`${API_BASE_URL}/subscriptions/status/`);
-  if (response.status === 404) return null;
-  return response.json();
+  try {
+    return await authFetchJson(`${API_BASE_URL}/subscriptions/status/`);
+  } catch (error) {
+    if (error.status === 404) return null;
+    throw error;
+  }
 };
 
 // Message APIs
+export const getContacts = async () => {
+  return authFetchJson(`${API_BASE_URL}/messages/contacts/`);
+};
+
 export const getConversation = async (userId) => {
-  const response = await authFetch(`${API_BASE_URL}/messages/conversation/${userId}/`);
-  return response.json();
+  return authFetchJson(`${API_BASE_URL}/messages/conversation/${userId}/`);
 };
 
 export const sendMessage = async (receiverId, content) => {
-  const response = await authFetch(`${API_BASE_URL}/messages/send/`, {
+  return authFetchJson(`${API_BASE_URL}/messages/send/`, {
     method: 'POST',
     body: JSON.stringify({ receiver_id: receiverId, content }),
   });
-  return response.json();
 };
 
 // Appointment APIs
-export const createAppointment = async (coachId, date, time, notes = '') => {
+export const createAppointmentSlot = async (date, time, notes = '') => {
   const response = await authFetch(`${API_BASE_URL}/appointments/create/`, {
-    method: 'POST',
-    body: JSON.stringify({ coach_id: coachId, date, time, notes }),
+    method: "POST",
+    body: JSON.stringify({
+      date,
+      time,
+      notes,
+    }),
   });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("CREATE SLOT ERROR:", errorText);
+    throw new Error(errorText || "Erreur création de créneau");
+  }
+
   return response.json();
+};
+
+export const createAppointment = createAppointmentSlot;
+
+export const getAvailableSlots = async () => {
+  return authFetchJson(`${API_BASE_URL}/appointments/available/`);
+};
+
+export const bookAppointmentSlot = async (appointmentId) => {
+  return authFetchJson(`${API_BASE_URL}/appointments/${appointmentId}/book/`, {
+    method: 'POST',
+  });
 };
 
 export const getMyAppointments = async () => {
-  const response = await authFetch(`${API_BASE_URL}/appointments/my/`);
-  return response.json();
+  return authFetchJson(`${API_BASE_URL}/appointments/my/`);
+};
+
+export const getUserById = async (userId) => {
+  return authFetchJson(`${API_BASE_URL}/users/${userId}/`);
 };
 
 export const confirmAppointment = async (appointmentId) => {
-  const response = await authFetch(`${API_BASE_URL}/appointments/${appointmentId}/confirm/`, {
+  return authFetchJson(`${API_BASE_URL}/appointments/${appointmentId}/confirm/`, {
     method: 'PATCH',
   });
-  return response.json();
 };
 
 // Progress APIs
 export const addProgress = async (programId, weight, notes = '') => {
-  const response = await authFetch(`${API_BASE_URL}/progress/add/`, {
+  return authFetchJson(`${API_BASE_URL}/progress/add/`, {
     method: 'POST',
     body: JSON.stringify({ program_id: programId, weight, notes }),
   });
-  return response.json();
 };
 
 export const getMyProgress = async () => {
-  const response = await authFetch(`${API_BASE_URL}/progress/my/`);
-  return response.json();
+  return authFetchJson(`${API_BASE_URL}/progress/my/`);
+};
+
+export const getPrograms = async () => {
+  return authFetchJson(`${API_BASE_URL}/programs/`);
 };
 
 // Profile APIs
 export const getProfile = async () => {
-  const response = await authFetch(`${API_BASE_URL}/users/profile/`);
-  return response.json();
+  return authFetchJson(`${API_BASE_URL}/users/profile/`);
 };
 
 export const updateProfile = async (data) => {
-  const response = await authFetch(`${API_BASE_URL}/users/profile/`, {
+  return authFetchJson(`${API_BASE_URL}/users/profile/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
-  return response.json();
 };

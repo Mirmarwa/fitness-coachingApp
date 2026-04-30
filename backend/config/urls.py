@@ -25,6 +25,9 @@ urlpatterns = [
     # API routes
     path('api/', include(router.urls)),
 
+    # User auth (register, etc.)
+    path('api/', include('users.urls')),
+
     # payments
     path('api/payments/', include('payments.urls')),
 
