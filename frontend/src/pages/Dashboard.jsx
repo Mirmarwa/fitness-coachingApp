@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authFetch, API_BASE_URL, getSubscriptionStatus } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
@@ -16,6 +16,13 @@ function Dashboard() {
   const [programs, setPrograms] = useState({});
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!localStorage.getItem("onboarding")) {
+      navigate("/onboarding");
+    }
+  }, [navigate]);
 
 useEffect(() => {
     let isMounted = true;
@@ -181,8 +188,9 @@ useEffect(() => {
 
   const onboarding = useMemo(() => {
     try {
-      const raw = localStorage.getItem("onboarding") || localStorage.getItem("onboarding_program");
+      const raw = localStorage.getItem("onboarding");
       if (!raw) return {};
+      if (raw === "true") return {};
       const parsed = JSON.parse(raw);
       if (parsed?.data) {
         return {

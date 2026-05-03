@@ -223,6 +223,11 @@ export default function Navbar() {
             Rendez-vous
           </NavLink>
         )}
+        {isLoggedIn && (
+          <NavLink to="/progress" className="app-nav-link">
+            Progression
+          </NavLink>
+        )}
 
         {isLoggedIn ? (
           <>

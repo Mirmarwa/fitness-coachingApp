@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const initialFormData = {
@@ -128,10 +129,11 @@ function generateProgram(userData) {
 }
 
 export default function Onboarding() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
   const [result, setResult] = useState(() => {
     try {
-      const saved = localStorage.getItem("onboarding") || localStorage.getItem("onboarding_program");
+      const saved = localStorage.getItem("onboarding_program");
       if (!saved) return null;
       const parsed = JSON.parse(saved);
       return parsed?.program ? parsed.program : parsed;
@@ -139,6 +141,12 @@ export default function Onboarding() {
       return null;
     }
   });
+
+  useEffect(() => {
+    if (localStorage.getItem("onboarding")) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const completion = useMemo(() => {
     const requiredFields = [
@@ -166,16 +174,12 @@ export default function Onboarding() {
     const generatedProgram = generateProgram(formData);
     setResult(generatedProgram);
 
-    const storedValue = {
-      program: generatedProgram,
-      data: formData,
-    };
-
-    localStorage.setItem("onboarding", JSON.stringify(storedValue));
+    localStorage.setItem("onboarding", "true");
     localStorage.setItem("onboarding_program", JSON.stringify(generatedProgram));
     localStorage.setItem("onboarding_data", JSON.stringify(formData));
 
     toast.success("Programme personnalisé généré");
+    navigate("/dashboard");
   };
 
   return (

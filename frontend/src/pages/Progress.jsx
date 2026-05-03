@@ -1,34 +1,19 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { addProgress, getMyProgress, getPrograms } from "../services/api";
+import { addProgress, getMyProgress } from "../services/api";
 
 export default function Progress() {
   const [progressData, setProgressData] = useState([]);
-  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    programId: "",
     weight: "",
     notes: ""
   });
 
   useEffect(() => {
     loadProgress();
-    loadPrograms();
   }, []);
-
-  const loadPrograms = async () => {
-    try {
-      const data = await getPrograms();
-      setPrograms(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length > 0 && !formData.programId) {
-        setFormData((prev) => ({ ...prev, programId: data[0].id }));
-      }
-    } catch (error) {
-      toast.error("Impossible de charger les programmes");
-    }
-  };
 
   const loadProgress = async () => {
     try {
@@ -44,20 +29,16 @@ export default function Progress() {
   const handleAddProgress = async (e) => {
     e.preventDefault();
 
-    if (!formData.programId || !formData.weight) {
-      toast.error("Veuillez choisir un programme et indiquer votre poids.");
+    if (!formData.weight) {
+      toast.error("Veuillez indiquer votre poids.");
       return;
     }
 
     try {
-      await addProgress(
-        parseInt(formData.programId, 10),
-        parseFloat(formData.weight),
-        formData.notes
-      );
+      await addProgress(parseFloat(formData.weight), formData.notes);
       toast.success("Progression ajoutée avec succès!");
       setShowForm(false);
-      setFormData((prev) => ({ ...prev, weight: "", notes: "" }));
+      setFormData({ weight: "", notes: "" });
       loadProgress();
     } catch (error) {
       toast.error("Erreur lors de l'ajout de la progression");
@@ -358,24 +339,6 @@ export default function Progress() {
             <h2 className="form-title">Ajouter une mesure de poids</h2>
 
             <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label" htmlFor="programId">Programme</label>
-                <select
-                  id="programId"
-                  className="form-select"
-                  value={formData.programId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, programId: e.target.value }))}
-                  required
-                >
-                  <option value="">Sélectionnez un programme</option>
-                  {programs.map((program) => (
-                    <option key={program.id} value={program.id}>
-                      {program.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="form-group">
                 <label className="form-label" htmlFor="weight">Poids (kg)</label>
                 <input

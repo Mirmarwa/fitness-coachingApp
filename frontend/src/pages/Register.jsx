@@ -48,6 +48,9 @@ export default function Register() {
 
       if (response.status === 201) {
         setSuccess("Inscription réussie ! Vous êtes maintenant connecté.");
+        localStorage.removeItem("onboarding");
+        localStorage.removeItem("onboarding_program");
+        localStorage.removeItem("onboarding_data");
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
         localStorage.setItem("username", data.user.username);

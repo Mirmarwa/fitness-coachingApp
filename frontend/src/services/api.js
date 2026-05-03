@@ -128,15 +128,20 @@ export const confirmAppointment = async (appointmentId) => {
 };
 
 // Progress APIs
-export const addProgress = async (programId, weight, notes = '') => {
+export const addProgress = async (weight, notes = '', programId = null) => {
+  const body = { weight, notes };
+  if (programId) {
+    body.program_id = programId;
+  }
+
   return authFetchJson(`${API_BASE_URL}/progress/add/`, {
     method: 'POST',
-    body: JSON.stringify({ program_id: programId, weight, notes }),
+    body: JSON.stringify(body),
   });
 };
 
 export const getMyProgress = async () => {
-  return authFetchJson(`${API_BASE_URL}/progress/my/`);
+  return authFetchJson(`${API_BASE_URL}/progress/`);
 };
 
 export const getPrograms = async () => {

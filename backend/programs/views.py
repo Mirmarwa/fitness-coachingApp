@@ -148,13 +148,25 @@ class ProgressViewSet(viewsets.ModelViewSet):
         weight = request.data.get('weight')
         notes = request.data.get('notes', '')
 
-        if not program_id or not weight:
-            return Response({'error': 'Program ID and weight are required'}, status=400)
+        if weight in [None, '']:
+            return Response({'error': 'Le poids est requis'}, status=400)
 
-        try:
-            program = Program.objects.get(id=program_id)
-        except Program.DoesNotExist:
-            return Response({'error': 'Program not found'}, status=404)
+        program = None
+        if program_id:
+            try:
+                program = Program.objects.get(id=program_id)
+            except Program.DoesNotExist:
+                return Response({'error': 'Programme introuvable'}, status=404)
+        else:
+            from payments.models import Payment
+            payment = Payment.objects.filter(user=request.user, status='completed').order_by('-date').first()
+            if payment and payment.program:
+                program = payment.program
+            else:
+                program = Program.objects.first()
+
+        if not program:
+            return Response({'error': 'Aucun programme disponible pour enregistrer la progression'}, status=400)
 
         progress = Progress.objects.create(
             user=request.user,
