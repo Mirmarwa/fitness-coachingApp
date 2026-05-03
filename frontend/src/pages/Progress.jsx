@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { addProgress, getMyProgress } from "../services/api";
+import ProgressCharts from "../components/ProgressCharts";
+import ProgressStats from "../components/ProgressStats";
+import BadgeSystem from "../components/BadgeSystem";
 
 export default function Progress() {
   const [progressData, setProgressData] = useState([]);
@@ -390,6 +393,10 @@ export default function Progress() {
           </div>
         ) : (
           <>
+            <ProgressStats data={progressData} />
+            <ProgressCharts data={progressData} />
+            <BadgeSystem data={progressData} />
+
             <div className="progress-card">
               <h2>Dernière mise à jour</h2>
               <p>

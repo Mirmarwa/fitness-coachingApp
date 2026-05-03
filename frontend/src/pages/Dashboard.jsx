@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authFetch, API_BASE_URL, getSubscriptionStatus } from "../services/api";
+import { authFetch, API_BASE_URL, getSubscriptionStatus, getMyProgress } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
+import ProgressStats from "../components/ProgressStats";
+import ProgressCharts from "../components/ProgressCharts";
+import BadgeSystem from "../components/BadgeSystem";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -16,6 +19,7 @@ function Dashboard() {
   const [programs, setPrograms] = useState({});
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [progressData, setProgressData] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -111,6 +115,16 @@ useEffect(() => {
           }
         } catch (error) {
           console.error("Error loading subscription:", error);
+        }
+
+        // Load progress data
+        try {
+          const progressDataResult = await getMyProgress();
+          if (isMounted) {
+            setProgressData(Array.isArray(progressDataResult) ? progressDataResult : []);
+          }
+        } catch (error) {
+          console.error("Error loading progress:", error);
         }
       } catch (error) {
         if (isMounted) {
@@ -379,11 +393,26 @@ useEffect(() => {
 
           .section-heading {
             margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
           }
 
           .section-heading h2 {
             margin: 0;
             font-size: 25px;
+          }
+
+          .view-more-link {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f766e;
+            text-decoration: none;
+            transition: color 160ms ease;
+          }
+
+          .view-more-link:hover {
+            color: #115e59;
           }
 
           .coach-subscription-card {
@@ -692,6 +721,20 @@ useEffect(() => {
             </span>
           </div>
         </section>
+
+        {progressData.length > 0 && (
+          <section>
+            <div className="section-heading">
+              <h2>📊 Mon évolution</h2>
+              <Link to="/progress" className="view-more-link">
+                Voir détails →
+              </Link>
+            </div>
+            <ProgressStats data={progressData} />
+            <ProgressCharts data={progressData} />
+            <BadgeSystem data={progressData} />
+          </section>
+        )}
 
         <section>
           <div className="section-heading">
