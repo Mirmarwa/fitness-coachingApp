@@ -11,6 +11,15 @@ const getUserIdFromToken = (token) => {
   }
 };
 
+const getUserRoleFromToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.role;
+  } catch {
+    return null;
+  }
+};
+
 const getDisplayName = (user) => {
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
   return fullName || user.username || user.email || "";
@@ -23,10 +32,14 @@ export default function Navbar() {
   const [displayName, setDisplayName] = useState(
     localStorage.getItem("user_display_name") || ""
   );
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("access");
     const userId = token ? getUserIdFromToken(token) : null;
+    const role = token ? getUserRoleFromToken(token) : null;
+
+    setUserRole(role);
 
     if (!token || !userId) {
       setDisplayName("");
@@ -200,6 +213,11 @@ export default function Navbar() {
         {isLoggedIn && (
           <NavLink to="/dashboard" className="app-nav-link">
             Dashboard
+          </NavLink>
+        )}
+        {isLoggedIn && userRole === "coach" && (
+          <NavLink to="/coach-dashboard" className="app-nav-link">
+            Coach Dashboard
           </NavLink>
         )}
         <NavLink to="/articles" className="app-nav-link">

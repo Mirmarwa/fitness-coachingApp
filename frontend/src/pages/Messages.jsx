@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { getContacts, getConversation, sendMessage } from "../services/api";
+import { getContacts, getConversation, sendMessage, authFetchJson, API_BASE_URL } from "../services/api";
 
 const getUserIdFromToken = (token) => {
   try {
@@ -8,6 +8,23 @@ const getUserIdFromToken = (token) => {
   } catch {
     return null;
   }
+};
+
+// Format timestamps (e.g., "À l'instant", "Il y a 2 min", "Hier")
+const formatTimestamp = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const secondsAgo = Math.floor((now - date) / 1000);
+
+  if (secondsAgo < 60) return "À l'instant";
+  if (secondsAgo < 3600) return `Il y a ${Math.floor(secondsAgo / 60)}m`;
+  if (secondsAgo < 86400) return `Il y a ${Math.floor(secondsAgo / 3600)}h`;
+  
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Hier";
+  
+  return date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
 };
 
 export default function Messages() {
@@ -24,6 +41,17 @@ export default function Messages() {
     loadContacts();
   }, []);
 
+  // Auto-refresh messages every 3 seconds when a conversation is open
+  useEffect(() => {
+    if (!selectedUser) return;
+    
+    const interval = setInterval(() => {
+      loadConversation(selectedUser.id);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [selectedUser]);
+
   const loadContacts = async () => {
     try {
       const data = await getContacts();
@@ -36,11 +64,41 @@ export default function Messages() {
     }
   };
 
+  const loadConversation = async (userId) => {
+    try {
+      const data = await getConversation(userId);
+      setMessages(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Mark unread messages as read
+  const markMessagesAsRead = async (messagesToMark) => {
+    const unreadMessages = messagesToMark.filter(
+      (msg) => !msg.is_read && msg.receiver === currentUserId
+    );
+
+    for (const msg of unreadMessages) {
+      try {
+        await authFetchJson(`${API_BASE_URL}/messages/${msg.id}/`, {
+          method: "PATCH",
+          body: JSON.stringify({ is_read: true }),
+        });
+      } catch (error) {
+        console.error("Failed to mark message as read:", error);
+      }
+    }
+  };
+
   const handleSelectConversation = async (user) => {
     setSelectedUser(user);
     try {
       const data = await getConversation(user.id);
-      setMessages(Array.isArray(data) ? data : []);
+      const messagesArray = Array.isArray(data) ? data : [];
+      setMessages(messagesArray);
+      // Mark messages as read
+      await markMessagesAsRead(messagesArray);
     } catch (error) {
       toast.error("Erreur lors du chargement des messages");
       console.error(error);
@@ -210,6 +268,20 @@ export default function Messages() {
             color: #64748b;
           }
 
+          .message-time {
+            font-size: 12px;
+            margin-top: 4px;
+            opacity: 0.7;
+          }
+
+          .message.sent .message-time {
+            color: #dcfce7;
+          }
+
+          .message.received .message-time {
+            color: #64748b;
+          }
+
           .message-input-area {
             padding: 24px;
             border-top: 1px solid rgba(15, 118, 110, 0.12);
@@ -315,7 +387,7 @@ export default function Messages() {
               >
                 <h3 className="conversation-name">{contact.name}</h3>
                 <p className="conversation-last-message">{contact.lastMessage}</p>
-                <p className="conversation-timestamp">{new Date(contact.timestamp).toLocaleDateString('fr-FR')}</p>
+                <p className="conversation-timestamp">{formatTimestamp(contact.timestamp)}</p>
               </div>
             ))
           )}
@@ -348,7 +420,8 @@ export default function Messages() {
                         {!isSender && (
                           <div className="message-sender">{message.sender_name}</div>
                         )}
-                        {message.content}
+                        <div>{message.content}</div>
+                        <div className="message-time">{formatTimestamp(message.created_at)}</div>
                       </div>
                     );
                   })

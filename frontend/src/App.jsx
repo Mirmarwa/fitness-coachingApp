@@ -8,6 +8,7 @@ import Coaches from "./pages/Coaches";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import Dashboard from "./pages/Dashboard";
+import CoachDashboard from "./pages/CoachDashboard";
 import Articles from "./pages/Articles";
 import Coach from "./pages/Coach";
 import Onboarding from "./pages/Onboarding";
@@ -17,6 +18,7 @@ import Messages from "./pages/Messages";
 import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
+import CoachRoute from "./components/CoachRoute";
 
 
 
@@ -37,6 +39,7 @@ function App() {
           <Route path="/programmes" element={<Programs />} />
           <Route path="/program/:id" element={<ProgramDetail />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/coach-dashboard" element={<CoachRoute><CoachDashboard /></CoachRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><Progress /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
