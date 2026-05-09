@@ -57,6 +57,7 @@ export default function Programs() {
   const [programs, setPrograms] = useState([]);
   const [purchasedIds, setPurchasedIds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [aiProgram, setAiProgram] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -87,6 +88,7 @@ export default function Programs() {
         }
       } catch {
         setPrograms([]);
+        setError("Impossible de charger les programmes.");
       } finally {
         setLoading(false);
       }
@@ -519,6 +521,8 @@ export default function Programs() {
 
         {loading ? (
           <div className="empty-state">Chargement des programmes...</div>
+        ) : error ? (
+          <div className="empty-state">{error}</div>
         ) : visiblePrograms.length === 0 ? (
           <div className="empty-state">Aucun programme disponible</div>
         ) : (

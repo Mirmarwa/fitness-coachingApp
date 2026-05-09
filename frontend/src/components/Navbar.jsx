@@ -210,6 +210,9 @@ export default function Navbar() {
         <NavLink to="/programmes" className="app-nav-link">
           Programmes
         </NavLink>
+        <NavLink to="/coaches" className="app-nav-link">
+          Coachs
+        </NavLink>
         {isLoggedIn && (
           <NavLink to="/dashboard" className="app-nav-link">
             Dashboard
