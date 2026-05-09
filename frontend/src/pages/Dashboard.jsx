@@ -18,15 +18,10 @@ function Dashboard() {
   const [payments, setPayments] = useState([]);
   const [programs, setPrograms] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [progressData, setProgressData] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!localStorage.getItem("onboarding")) {
-      navigate("/onboarding");
-    }
-  }, [navigate]);
 
 useEffect(() => {
     let isMounted = true;
@@ -129,6 +124,7 @@ useEffect(() => {
       } catch (error) {
         if (isMounted) {
           console.error("Dashboard error:", error);
+          setError("Impossible de charger le tableau de bord.");
           if (error.message !== "timeout") {
             toast.error("Impossible de charger le tableau de bord");
           }
@@ -747,6 +743,13 @@ useEffect(() => {
                 <div className="loading-spinner" aria-hidden="true" />
                 <h2>Chargement des programmes...</h2>
                 <p>Vos programmes achetés sont en cours de préparation.</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <div>
+                <h2>Erreur de chargement</h2>
+                <p>{error}</p>
               </div>
             </div>
           ) : purchasedPrograms.length === 0 ? (

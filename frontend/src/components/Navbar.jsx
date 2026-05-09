@@ -36,8 +36,25 @@ export default function Navbar() {
 
   useEffect(() => {
     const token = localStorage.getItem("access");
-    const userId = token ? getUserIdFromToken(token) : null;
-    const role = token ? getUserRoleFromToken(token) : null;
+    if (!token) {
+      setUserRole(null);
+      setDisplayName(localStorage.getItem("username") || "");
+      return;
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(atob(token.split(".")[1]));
+    } catch {
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+      setUserRole(null);
+      setDisplayName(localStorage.getItem("username") || "");
+      return;
+    }
+
+    const userId = payload.user_id;
+    const role = payload.role;
 
     setUserRole(role);
 

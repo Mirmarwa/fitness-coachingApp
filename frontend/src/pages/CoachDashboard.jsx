@@ -8,6 +8,7 @@ export default function CoachDashboard() {
   const [programs, setPrograms] = useState([]);
   const [clientProgress, setClientProgress] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showCreateProgram, setShowCreateProgram] = useState(false);
   const [newProgram, setNewProgram] = useState({
     title: "",
@@ -22,6 +23,7 @@ export default function CoachDashboard() {
   const loadCoachData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       // 1️⃣ Charger les rendez-vous du coach
       const appointmentsRes = await authFetchJson(
@@ -80,6 +82,7 @@ export default function CoachDashboard() {
       // (Note: Pour cela, faudrait avoir coach_id dans le programme)
       setPrograms(allPrograms);
     } catch (error) {
+      setError("Impossible de charger les données du dashboard.");
       toast.error("Erreur lors du chargement du dashboard");
       console.error(error);
     } finally {
@@ -397,6 +400,13 @@ export default function CoachDashboard() {
                 Gérez vos clients, rendez-vous et programmes
               </p>
             </div>
+
+            {error && (
+              <div className="empty-state">
+                <h3>Erreur</h3>
+                <p>{error}</p>
+              </div>
+            )}
 
             {/* 📊 STATISTIQUES */}
             <div className="stats-grid">
