@@ -1,57 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authFetch, API_BASE_URL } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
-
-const API_URL = "http://127.0.0.1:8000";
-
-const MOCK_PROGRAMS = [
-  {
-    id: 1,
-    title: "Programme Prise de Masse",
-    description:
-      "Developpez votre force et votre volume musculaire avec un plan clair et progressif.",
-    price: 199,
-    image:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Developpe couche", sets: 4, reps: 10 },
-      { id: 2, name: "Squat", sets: 4, reps: 8 },
-    ],
-    nutrition_plans: [{ id: 1, title: "Menu prise de masse", calories: 850 }],
-  },
-  {
-    id: 2,
-    title: "Programme Perte de Poids",
-    description:
-      "Brulez les graisses avec des seances dynamiques et une nutrition simple.",
-    price: 149,
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Circuit cardio", sets: 5, reps: 12 },
-      { id: 2, name: "Fentes marchees", sets: 4, reps: 14 },
-    ],
-    nutrition_plans: [{ id: 1, title: "Menu equilibre", calories: 520 }],
-  },
-  {
-    id: 3,
-    title: "Programme Debutant Full Body",
-    description:
-      "Apprenez les bases et construisez une routine complete, simple et motivante.",
-    price: 99,
-    image:
-      "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Pompes inclinees", sets: 3, reps: 10 },
-      { id: 2, name: "Goblet squat", sets: 3, reps: 12 },
-    ],
-    nutrition_plans: [{ id: 1, title: "Plan decouverte", calories: 580 }],
-  },
-];
-
-const FALLBACK_IMAGE = MOCK_PROGRAMS[0].image;
 
 export default function Programs() {
   const [programs, setPrograms] = useState([]);
@@ -64,7 +14,7 @@ export default function Programs() {
   useEffect(() => {
     const loadPrograms = async () => {
       try {
-        const programsResponse = await fetch(`${API_URL}/api/programs/`);
+        const programsResponse = await fetch(`${API_BASE_URL}/programs/`);
         const programsData = await programsResponse.json();
 
         setPrograms(Array.isArray(programsData) ? programsData : []);
@@ -97,10 +47,7 @@ export default function Programs() {
     loadPrograms();
   }, []);
 
-  const visiblePrograms = useMemo(
-    () => (programs.length > 0 ? programs : MOCK_PROGRAMS),
-    [programs]
-  );
+  const visiblePrograms = useMemo(() => programs, [programs]);
 
   const handleGenerateProgram = async () => {
     setAiLoading(true);

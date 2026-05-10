@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-
-const API_URL = "http://127.0.0.1:8000";
+import { BACKEND_BASE_URL } from "../services/api";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
@@ -8,10 +7,10 @@ export default function ProgramCard({ program, isPaid = false, showPaidBadge = f
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return FALLBACK_IMAGE;
     if (image.startsWith("http")) return image;
-    return `${API_URL}${image}`;
+    return `${BACKEND_BASE_URL}${image}`;
   };
 
-  const getPrice = (program) => Number(program.price || program.amount || 100);
+  const getPrice = (program) => Number(program.price ?? program.amount ?? 100);
 
   const getShortDescription = (description) => {
     if (!description) {

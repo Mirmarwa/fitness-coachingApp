@@ -34,6 +34,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
             defaults={
                 "description": "Programme prise de masse",
                 "duration": 30,
+                "price": 199,
             }
         )
 
@@ -43,6 +44,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
             defaults={
                 "description": "Programme perte de poids",
                 "duration": 30,
+                "price": 149,
             }
         )
 
@@ -52,6 +54,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
             defaults={
                 "description": "Programme débutant",
                 "duration": 20,
+                "price": 99,
             }
         )
 
@@ -115,12 +118,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def full(self, request, pk=None):
         program = self.get_object()
-
-        return Response({
-            "program": ProgramSerializer(program).data,
-            "exercises": program.exercises.all().values(),
-            "nutrition": program.nutrition_plans.all().values()
-        })
+        return Response(ProgramSerializer(program).data)
 
     @action(detail=False, methods=['get'], url_path='generate-program')
     def generate_program(self, request):

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { BACKEND_BASE_URL } from "../services/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/register/", {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/register/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

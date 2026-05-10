@@ -1,60 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authFetch, API_BASE_URL } from "../services/api";
+import { authFetch, API_BASE_URL, BACKEND_BASE_URL } from "../services/api";
 
-const API_URL = "http://127.0.0.1:8000";
-
-const MOCK_PROGRAMS = [
-  {
-    id: 1,
-    title: "Programme Prise de Masse",
-    description:
-      "Un plan complet pour developper la force, augmenter le volume musculaire et progresser semaine apres semaine.",
-    price: 199,
-    image:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Developpe couche", sets: 4, reps: 10 },
-      { id: 2, name: "Squat", sets: 4, reps: 8 },
-      { id: 3, name: "Rowing barre", sets: 3, reps: 12 },
-    ],
-    nutrition_plans: [
-      { id: 1, title: "Petit-dejeuner proteine", calories: 650 },
-      { id: 2, title: "Dejeuner prise de masse", calories: 850 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Programme Perte de Poids",
-    description:
-      "Des seances dynamiques et un suivi nutritionnel simple pour bruler les graisses durablement.",
-    price: 149,
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Circuit cardio", sets: 5, reps: 12 },
-      { id: 2, name: "Fentes marchees", sets: 4, reps: 14 },
-    ],
-    nutrition_plans: [{ id: 1, title: "Menu equilibre", calories: 520 }],
-  },
-  {
-    id: 3,
-    title: "Programme Debutant Full Body",
-    description:
-      "Une base claire pour apprendre les mouvements essentiels et construire une routine solide.",
-    price: 99,
-    image:
-      "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
-    exercises: [
-      { id: 1, name: "Pompes inclinees", sets: 3, reps: 10 },
-      { id: 2, name: "Goblet squat", sets: 3, reps: 12 },
-    ],
-    nutrition_plans: [{ id: 1, title: "Plan decouverte", calories: 580 }],
-  },
-];
-
-const FALLBACK_IMAGE = MOCK_PROGRAMS[0].image;
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
 function ProgramDetail() {
   const { id } = useParams();
@@ -62,6 +11,7 @@ function ProgramDetail() {
   const [paid, setPaid] = useState(false);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -86,6 +36,8 @@ function ProgramDetail() {
           throw new Error("Empty program");
         }
 
+        const programPayload = programData.program || programData;
+
         const userPaid = Array.isArray(userPaymentsData)
           ? userPaymentsData.some((payment) => {
               const programId =
@@ -100,15 +52,12 @@ function ProgramDetail() {
             })
           : false;
 
-        setProgram(programData);
+        setProgram(programPayload);
         setPaid(userPaid);
-      } catch {
-        const mockProgram =
-          MOCK_PROGRAMS.find((item) => String(item.id) === String(id)) ||
-          MOCK_PROGRAMS[0];
-
-        setProgram(mockProgram);
+      } catch (err) {
+        setProgram(null);
         setPaid(false);
+        setError("Impossible de charger le programme complet.");
         toast.error("Impossible de charger le programme complet");
       } finally {
         setLoading(false);
@@ -118,7 +67,10 @@ function ProgramDetail() {
     loadProgram();
   }, [id]);
 
-  const price = useMemo(() => Number(program?.price || program?.amount || 100), [program]);
+  const price = useMemo(
+    () => Number(program?.price ?? program?.amount ?? 0),
+    [program]
+  );
 
   const exercises = Array.isArray(program?.exercises) ? program.exercises : [];
   const nutritionPlans = Array.isArray(program?.nutrition_plans)
@@ -128,34 +80,24 @@ function ProgramDetail() {
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return FALLBACK_IMAGE;
     if (image.startsWith("http")) return image;
-    return `${API_URL}${image}`;
+    return `${BACKEND_BASE_URL}${image}`;
   };
 
   const handlePayment = async () => {
-    if (paid || paying) return;
+    if (paid || paying || !program) return;
 
     setPaying(true);
 
     try {
-      let response = await authFetch(`${API_BASE_URL}/payments/create/`, {
+      const response = await authFetch(`${API_BASE_URL}/payments/create/`, {
         method: "POST",
         body: JSON.stringify({
-          program_id: id,
+          program: id,
+          amount: price,
         }),
       });
-      let paymentData = await response.json().catch(() => ({}));
 
-      if (!response.ok || paymentData.error) {
-        response = await authFetch(`${API_BASE_URL}/payments/create/`, {
-          method: "POST",
-          body: JSON.stringify({
-            program: id,
-            program_id: id,
-            amount: price,
-          }),
-        });
-        paymentData = await response.json().catch(() => ({}));
-      }
+      const paymentData = await response.json().catch(() => ({}));
 
       if (!response.ok || paymentData.error) {
         throw new Error("Payment failed");
@@ -175,6 +117,15 @@ function ProgramDetail() {
       <main className="detail-page">
         <style>{detailStyles}</style>
         <div className="empty-box">Chargement du programme...</div>
+      </main>
+    );
+  }
+
+  if (!program) {
+    return (
+      <main className="detail-page">
+        <style>{detailStyles}</style>
+        <div className="empty-box">{error || "Programme introuvable."}</div>
       </main>
     );
   }

@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { authFetchJson, API_BASE_URL } from "../services/api";
 
+const getUserIdFromToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_id;
+  } catch {
+    return null;
+  }
+};
+
 export default function CoachDashboard() {
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -77,10 +86,13 @@ export default function CoachDashboard() {
       // 3️⃣ Charger les programmes du coach
       const programsRes = await authFetchJson(`${API_BASE_URL}/programs/`);
       const allPrograms = Array.isArray(programsRes) ? programsRes : [];
+      const currentUserId = getUserIdFromToken(localStorage.getItem("access"));
 
-      // Filtrer pour voir uniquement les programmes du coach
-      // (Note: Pour cela, faudrait avoir coach_id dans le programme)
-      setPrograms(allPrograms);
+      const ownedPrograms = allPrograms.filter(
+        (program) => String(program.coach) === String(currentUserId)
+      );
+
+      setPrograms(ownedPrograms);
     } catch (error) {
       setError("Impossible de charger les données du dashboard.");
       toast.error("Erreur lors du chargement du dashboard");

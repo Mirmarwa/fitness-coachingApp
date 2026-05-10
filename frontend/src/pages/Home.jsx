@@ -1,58 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { authFetch } from "../services/api";
+import { authFetch, API_BASE_URL } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
-
-const API_URL = "http://127.0.0.1:8000";
-
-const MOCK_PROGRAMS = [
-  {
-    id: 1,
-    title: "Programme Prise de Masse",
-    description:
-      "Développez votre force et votre volume musculaire avec un plan structuré.",
-    price: 199,
-    image:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: 2,
-    title: "Programme Perte de Poids",
-    description:
-      "Brûlez les graisses avec des séances efficaces et une nutrition simple.",
-    price: 149,
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: 3,
-    title: "Programme Débutant Full Body",
-    description:
-      "Apprenez les bases et construisez une routine complète sans stress.",
-    price: 99,
-    image:
-      "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
-  },
-];
-
-const FALLBACK_IMAGE = MOCK_PROGRAMS[0].image;
 
 export default function Home() {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    authFetch(`${API_URL}/api/programs/`)
+    authFetch(`${API_BASE_URL}/programs/`)
       .then((res) => res.json())
       .then((data) => setPrograms(Array.isArray(data) ? data : []))
       .catch(() => setPrograms([]))
       .finally(() => setLoading(false));
   }, []);
 
-  const visiblePrograms = useMemo(
-    () => (programs.length > 0 ? programs : MOCK_PROGRAMS),
-    [programs]
-  );
+  const visiblePrograms = useMemo(() => programs, [programs]);
 
   return (
     <main style={styles.page}>

@@ -6,6 +6,7 @@ class Program(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     duration = models.IntegerField()  # en jours
+    price = models.FloatField(default=0)
     coach = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='programs/', blank=True, null=True)
 

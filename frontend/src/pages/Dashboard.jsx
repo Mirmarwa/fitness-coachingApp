@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authFetch, API_BASE_URL, getSubscriptionStatus, getMyProgress } from "../services/api";
+import { authFetch, API_BASE_URL, BACKEND_BASE_URL, getSubscriptionStatus, getMyProgress } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
 import ProgressStats from "../components/ProgressStats";
 import ProgressCharts from "../components/ProgressCharts";
 import BadgeSystem from "../components/BadgeSystem";
-
-const API_URL = "http://127.0.0.1:8000";
 
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
@@ -220,7 +218,7 @@ useEffect(() => {
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return PLACEHOLDER_IMAGE;
     if (image.startsWith("http")) return image;
-    return `${API_URL}${image}`;
+    return `${BACKEND_BASE_URL}${image}`;
   };
 
   const formatGoal = (goal) => {

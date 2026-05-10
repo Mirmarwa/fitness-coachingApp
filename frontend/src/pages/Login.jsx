@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { BACKEND_BASE_URL } from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/token/", {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/token/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

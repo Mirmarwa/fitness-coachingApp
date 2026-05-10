@@ -20,11 +20,22 @@ def create_payment(request):
     """
     try:
         user = request.user
-        program_id = request.data.get('program')
+        program_id = request.data.get('program') or request.data.get('program_id')
         amount = request.data.get('amount')
+
+        if not program_id:
+            return Response({'error': 'ID de programme requis.'}, status=400)
 
         # Récupérer le programme (404 si inexistant)
         program = get_object_or_404(Program, id=program_id)
+
+        if amount in [None, '']:
+            amount = program.price
+
+        try:
+            amount = float(amount)
+        except (TypeError, ValueError):
+            return Response({'error': 'Montant invalide.'}, status=400)
 
         # Vérifier si l'utilisateur a déjà acheté ce programme
         already_paid = Payment.objects.filter(
