@@ -37,6 +37,10 @@ def create_payment(request):
         except (TypeError, ValueError):
             return Response({'error': 'Montant invalide.'}, status=400)
 
+        # Valider que le montant est positif
+        if amount <= 0:
+            return Response({'error': 'Montant invalide'}, status=400)
+
         # Vérifier si l'utilisateur a déjà acheté ce programme
         already_paid = Payment.objects.filter(
             user=user,

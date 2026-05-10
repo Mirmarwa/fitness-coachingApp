@@ -100,13 +100,15 @@ function ProgramDetail() {
       const paymentData = await response.json().catch(() => ({}));
 
       if (!response.ok || paymentData.error) {
-        throw new Error("Payment failed");
+        const errorMsg = paymentData.error || "Impossible de finaliser le paiement";
+        throw new Error(errorMsg);
       }
 
       setPaid(true);
       toast.success("Paiement validé, programme débloqué");
-    } catch {
-      toast.error("Impossible de finaliser le paiement");
+    } catch (err) {
+      const errorMsg = err?.message || "Impossible de finaliser le paiement";
+      toast.error(errorMsg);
     } finally {
       setPaying(false);
     }
