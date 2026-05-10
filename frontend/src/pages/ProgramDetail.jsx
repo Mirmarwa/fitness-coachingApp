@@ -54,7 +54,7 @@ function ProgramDetail() {
 
         setProgram(programPayload);
         setPaid(userPaid);
-      } catch (err) {
+      } catch {
         setProgram(null);
         setPaid(false);
         setError("Impossible de charger le programme complet.");
@@ -67,10 +67,9 @@ function ProgramDetail() {
     loadProgram();
   }, [id]);
 
-  const price = useMemo(
-    () => Number(program?.price ?? program?.amount ?? 0),
-    [program]
-  );
+  const price = useMemo(() => Number(program?.price ?? program?.amount), [program]);
+  const hasValidPrice = Number.isFinite(price) && price > 0;
+  const priceLabel = hasValidPrice ? `${price.toFixed(2)} DH` : "Prix non disponible";
 
   const exercises = Array.isArray(program?.exercises) ? program.exercises : [];
   const nutritionPlans = Array.isArray(program?.nutrition_plans)
@@ -84,7 +83,10 @@ function ProgramDetail() {
   };
 
   const handlePayment = async () => {
-    if (paid || paying || !program) return;
+    if (paid || paying || !program || !hasValidPrice) {
+      if (!hasValidPrice) toast.error("Prix non disponible pour ce programme");
+      return;
+    }
 
     setPaying(true);
 
@@ -153,22 +155,24 @@ function ProgramDetail() {
             {paid ? "✔️ Payé" : "Programme premium"}
           </span>
 
-          <h1>{program.title}</h1>
-          <p>{program.description}</p>
+          <h1>{program.title || "Programme fitness"}</h1>
+          <p>{program.description || "Description non disponible"}</p>
 
           <div className="hero-actions">
-            <strong>{price.toFixed(2)} DH</strong>
+            <strong>{priceLabel}</strong>
             <button
               type="button"
               onClick={handlePayment}
-              disabled={paid || paying}
+              disabled={paid || paying || !hasValidPrice}
               className={paid ? "buy-button paid" : "buy-button"}
             >
               {paid
                 ? "Déjà acheté ✅"
                 : paying
                   ? "Paiement en cours..."
-                  : "Acheter ce programme"}
+                  : hasValidPrice
+                    ? "Acheter ce programme"
+                    : "Paiement indisponible"}
             </button>
           </div>
         </div>
@@ -186,14 +190,14 @@ function ProgramDetail() {
 
           <div className="mini-card-grid">
             {exercises.length === 0 ? (
-              <div className="empty-mini-card">Aucun exercice disponible</div>
+              <div className="empty-mini-card">Aucun exercice</div>
             ) : (
               exercises.map((exercise) => (
                 <article className="mini-card" key={exercise.id || exercise.name}>
-                  <h3>{exercise.name}</h3>
+                  <h3>{exercise.name || "Exercice"}</h3>
                   <div className="mini-meta">
-                    <span>{exercise.sets || 0} séries</span>
-                    <span>{exercise.reps || 0} reps</span>
+                    <span>{exercise.sets || "Non disponible"} séries</span>
+                    <span>{exercise.reps || "Non disponible"} reps</span>
                   </div>
                 </article>
               ))
@@ -213,14 +217,14 @@ function ProgramDetail() {
           <div className="mini-card-grid">
             {nutritionPlans.length === 0 ? (
               <div className="empty-mini-card">
-                Aucun plan nutritionnel disponible
+                Aucun plan nutritionnel
               </div>
             ) : (
               nutritionPlans.map((plan) => (
                 <article className="mini-card" key={plan.id || plan.title}>
-                  <h3>{plan.title}</h3>
+                  <h3>{plan.title || "Plan nutritionnel"}</h3>
                   <div className="mini-meta">
-                    <span>{plan.calories || 0} kcal</span>
+                    <span>{plan.calories || "Non disponible"} kcal</span>
                   </div>
                 </article>
               ))

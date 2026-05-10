@@ -1,16 +1,29 @@
 import { Link } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../services/api";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
-export default function ProgramCard({ program, isPaid = false, showPaidBadge = false, customPrice, variant = "default" }) {
+export default function ProgramCard({
+  program,
+  isPaid = false,
+  showPaidBadge = false,
+  customPrice,
+  variant = "default",
+}) {
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return FALLBACK_IMAGE;
     if (image.startsWith("http")) return image;
     return `${BACKEND_BASE_URL}${image}`;
   };
 
-  const getPrice = (program) => Number(program.price ?? program.amount ?? 100);
+  const getPriceLabel = () => {
+    if (customPrice) return customPrice;
+
+    const price = Number(program?.price ?? program?.amount);
+    if (!Number.isFinite(price) || price <= 0) return "Prix non disponible";
+    return `${price.toFixed(2)} DH`;
+  };
 
   const getShortDescription = (description) => {
     if (!description) {
@@ -19,6 +32,8 @@ export default function ProgramCard({ program, isPaid = false, showPaidBadge = f
 
     return description.length > 115 ? `${description.slice(0, 115)}...` : description;
   };
+
+  const detailLink = program?.id ? `/program/${program.id}` : "/programmes";
 
   return (
     <>
@@ -133,13 +148,13 @@ export default function ProgramCard({ program, isPaid = false, showPaidBadge = f
         <div className="program-image-box">
           <img
             className="program-image"
-            src={getImageUrl(program.image)}
-            alt={program.title}
+            src={getImageUrl(program?.image)}
+            alt={program?.title || "Programme fitness"}
             onError={(event) => {
               event.currentTarget.src = FALLBACK_IMAGE;
             }}
           />
-          {showPaidBadge && isPaid && <span className="paid-badge">✔️ Payé</span>}
+          {showPaidBadge && isPaid && <span className="paid-badge">Payé</span>}
         </div>
 
         <div className="program-content">
@@ -149,28 +164,24 @@ export default function ProgramCard({ program, isPaid = false, showPaidBadge = f
                 <h3 className="program-title">
                   {program?.title || "Programme fitness"}
                 </h3>
-                <span className="program-price">
-                  {customPrice || `${getPrice(program).toFixed(2)} DH`}
-                </span>
+                <span className="program-price">{getPriceLabel()}</span>
               </div>
               <p className="program-description">
                 {getShortDescription(program?.description)}
               </p>
-              <Link className="program-button" to={`/program/${program.id}`}>
+              <Link className="program-button" to={detailLink}>
                 Voir le programme
               </Link>
             </>
           ) : (
             <>
-              <h3 className="program-title">{program.title}</h3>
+              <h3 className="program-title">{program?.title || "Programme fitness"}</h3>
               <p className="program-description">
-                {getShortDescription(program.description)}
+                {getShortDescription(program?.description)}
               </p>
               <div className="program-footer">
-                <strong className="program-price">
-                  {customPrice || `${getPrice(program).toFixed(2)} DH`}
-                </strong>
-                <Link className="program-button" to={`/program/${program.id}`}>
+                <strong className="program-price">{getPriceLabel()}</strong>
+                <Link className="program-button" to={detailLink}>
                   Voir
                 </Link>
               </div>

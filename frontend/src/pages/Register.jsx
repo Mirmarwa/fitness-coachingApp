@@ -2,6 +2,24 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../services/api";
 
+const getFieldError = (data) => {
+  if (!data) return "Erreur lors de l'inscription.";
+
+  const value =
+    data.detail ||
+    data.error ||
+    data.non_field_errors ||
+    data.password ||
+    data.password_confirm ||
+    data.username ||
+    data.email ||
+    data.role;
+
+  if (Array.isArray(value)) return value.join(" ");
+  if (typeof value === "object") return Object.values(value).flat().join(" ");
+  return value || "Erreur lors de l'inscription.";
+};
+
 export default function Register() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
@@ -45,27 +63,32 @@ export default function Register() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (response.status === 201) {
-        setSuccess("Inscription réussie ! Vous êtes maintenant connecté.");
+      if (response.ok) {
         localStorage.removeItem("onboarding");
         localStorage.removeItem("onboarding_program");
         localStorage.removeItem("onboarding_data");
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-        localStorage.setItem("username", data.user.username);
-        setTimeout(() => navigate("/dashboard"), 1000);
+
+        if (data?.access && data?.refresh && data?.user) {
+          localStorage.setItem("access", data.access);
+          localStorage.setItem("refresh", data.refresh);
+          localStorage.setItem("username", data.user.username || username);
+          localStorage.setItem("user_role", data.user.role || role);
+          setSuccess("Inscription réussie ! Vous êtes maintenant connecté.");
+          setTimeout(
+            () => navigate(data.user.role === "coach" ? "/coach-dashboard" : "/dashboard"),
+            800
+          );
+          return;
+        }
+
+        setSuccess("Compte créé avec succès. Connectez-vous pour continuer.");
+        setTimeout(() => navigate("/login"), 900);
       } else {
-        const backendError =
-          data.password || data.username || data.email || data.detail || data.error;
-        setError(
-          Array.isArray(backendError)
-            ? backendError.join(" ")
-            : backendError || "Erreur lors de l'inscription."
-        );
+        setError(getFieldError(data));
       }
-    } catch (err) {
+    } catch {
       setError("Impossible de se connecter au serveur. Réessayez plus tard.");
     } finally {
       setLoading(false);

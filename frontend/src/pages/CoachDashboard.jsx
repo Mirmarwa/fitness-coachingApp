@@ -15,14 +15,14 @@ export default function CoachDashboard() {
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [clientProgress, setClientProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateProgram, setShowCreateProgram] = useState(false);
   const [newProgram, setNewProgram] = useState({
     title: "",
     description: "",
-    duration: 30,
+    duration: "30",
+    price: "",
   });
 
   useEffect(() => {
@@ -41,47 +41,15 @@ export default function CoachDashboard() {
       setAppointments(Array.isArray(appointmentsRes) ? appointmentsRes : []);
 
       // 2️⃣ Récupérer les clients uniques (via rendez-vous)
-      const clientIds = new Set();
+      const clientsMap = new Map();
       (Array.isArray(appointmentsRes) ? appointmentsRes : []).forEach((apt) => {
-        if (apt.client_name) clientIds.add(apt.client);
+        if (!apt.client) return;
+        clientsMap.set(apt.client, {
+          id: apt.client,
+          name: apt.client_name || `Client #${apt.client}`,
+        });
       });
-
-      // Aussi chercher les clients via la progression
-      try {
-        const progressRes = await authFetchJson(`${API_BASE_URL}/progress/`);
-        const allProgress = Array.isArray(progressRes) ? progressRes : [];
-
-        // Construire la liste des clients uniques avec leur progression
-        const clientsMap = new Map();
-
-        allProgress.forEach((prog) => {
-          const clientKey = prog.user;
-          if (!clientsMap.has(clientKey)) {
-            clientsMap.set(clientKey, {
-              id: prog.user,
-              name: prog.user_name,
-              email: prog.user_name,
-              progressRecords: [],
-            });
-          }
-          clientsMap.get(clientKey).progressRecords.push(prog);
-        });
-
-        const clientsList = Array.from(clientsMap.values());
-        setClients(clientsList);
-
-        // Sauvegarder la progression par client
-        const progressMap = {};
-        clientsList.forEach((client) => {
-          progressMap[client.id] = client.progressRecords.sort(
-            (a, b) => new Date(b.date) - new Date(a.date)
-          );
-        });
-        setClientProgress(progressMap);
-      } catch {
-        console.error("Erreur chargement progression");
-        setClients([]);
-      }
+      setClients(Array.from(clientsMap.values()));
 
       // 3️⃣ Charger les programmes du coach
       const programsRes = await authFetchJson(`${API_BASE_URL}/programs/`);
@@ -108,14 +76,32 @@ export default function CoachDashboard() {
       return;
     }
 
+    const duration = Number(newProgram.duration);
+    const price = Number(newProgram.price);
+
+    if (!Number.isFinite(duration) || duration <= 0) {
+      toast.error("La durée doit être un nombre valide.");
+      return;
+    }
+
+    if (!Number.isFinite(price) || price <= 0) {
+      toast.error("Le prix doit être un nombre valide.");
+      return;
+    }
+
     try {
       const response = await authFetchJson(`${API_BASE_URL}/programs/`, {
         method: "POST",
-        body: JSON.stringify(newProgram),
+        body: JSON.stringify({
+          title: newProgram.title.trim(),
+          description: newProgram.description.trim(),
+          duration,
+          price,
+        }),
       });
 
       setPrograms([...programs, response]);
-      setNewProgram({ title: "", description: "", duration: 30 });
+      setNewProgram({ title: "", description: "", duration: "30", price: "" });
       setShowCreateProgram(false);
       toast.success("Programme créé !");
       await loadCoachData();
@@ -129,6 +115,20 @@ export default function CoachDashboard() {
     clients: clients.length,
     appointments: appointments.filter((a) => a.status === "booked").length,
     programs: programs.length,
+    revenue: "Non disponible",
+  };
+
+  const formatPrice = (value) => {
+    const price = Number(value);
+    if (!Number.isFinite(price) || price <= 0) return "Prix non disponible";
+    return `${price.toFixed(2)} DH`;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "Non disponible";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Non disponible";
+    return date.toLocaleDateString("fr-FR");
   };
 
   return (
@@ -434,6 +434,10 @@ export default function CoachDashboard() {
                 <p className="stat-number">{stats.programs}</p>
                 <p className="stat-label">Programmes créés</p>
               </div>
+              <div className="stat-card">
+                <p className="stat-number">{stats.revenue}</p>
+                <p className="stat-label">Revenus</p>
+              </div>
             </div>
 
             {/* ➕ CRÉER UN PROGRAMME */}
@@ -480,11 +484,30 @@ export default function CoachDashboard() {
                     <input
                       className="form-input"
                       type="number"
+                      min="1"
+                      step="1"
                       value={newProgram.duration}
                       onChange={(e) =>
                         setNewProgram({
                           ...newProgram,
-                          duration: parseInt(e.target.value),
+                          duration: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Prix (DH)</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      placeholder="Ex: 199"
+                      value={newProgram.price}
+                      onChange={(e) =>
+                        setNewProgram({
+                          ...newProgram,
+                          price: e.target.value,
                         })
                       }
                     />
@@ -520,39 +543,11 @@ export default function CoachDashboard() {
                   {clients.map((client) => (
                     <div key={client.id} className="card">
                       <div className="card-header">
-                        <h3 className="card-title">{client.name}</h3>
+                        <h3 className="card-title">
+                          {client.name || "Client non disponible"}
+                        </h3>
                       </div>
-                      <p className="card-content">
-                        <strong>Dernière progression:</strong>
-                      </p>
-                      {clientProgress[client.id]?.length > 0 ? (
-                        <>
-                          <div className="progress-item">
-                            <span className="progress-weight">
-                              {
-                                clientProgress[client.id][0].weight
-                              }{" "}
-                              kg
-                            </span>
-                            <br />
-                            <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                              {new Date(
-                                clientProgress[client.id][0].date
-                              ).toLocaleDateString("fr-FR")}
-                            </span>
-                          </div>
-                          {clientProgress[client.id][0].notes && (
-                            <div className="progress-item">
-                              <strong>Notes:</strong> "
-                              {clientProgress[client.id][0].notes}"
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <p className="card-content" style={{ color: "#94a3b8" }}>
-                          Pas encore de progression
-                        </p>
-                      )}
+                      <p className="card-content">Client suivi via rendez-vous.</p>
                     </div>
                   ))}
                 </div>
@@ -575,7 +570,7 @@ export default function CoachDashboard() {
                     <div key={apt.id} className="card">
                       <div className="card-header">
                         <h3 className="card-title">
-                          {apt.date} à {apt.time}
+                          {formatDate(apt.date)} à {apt.time || "Non disponible"}
                         </h3>
                         <span
                           className={`card-badge ${apt.status === "booked" ? "booked" : "available"}`}
@@ -625,16 +620,26 @@ export default function CoachDashboard() {
                 <div className="cards-grid">
                   {programs.map((prog) => (
                     <div key={prog.id} className="card">
-                      <h3 className="card-title">{prog.title}</h3>
-                      <p className="card-content">{prog.description}</p>
+                      <h3 className="card-title">{prog.title || "Programme fitness"}</h3>
                       <p className="card-content">
-                        <strong>Durée:</strong> {prog.duration} jours
+                        {prog.description || "Description non disponible"}
                       </p>
-                      {prog.exercises && prog.exercises.length > 0 && (
-                        <p className="card-content">
-                          <strong>Exercices:</strong> {prog.exercises.length}
-                        </p>
-                      )}
+                      <p className="card-content">
+                        <strong>Durée:</strong> {prog.duration || "Non disponible"} jours
+                      </p>
+                      <p className="card-content">
+                        <strong>Prix:</strong> {formatPrice(prog.price)}
+                      </p>
+                      <p className="card-content">
+                        <strong>Exercices:</strong>{" "}
+                        {prog.exercises?.length ? prog.exercises.length : "Aucun exercice"}
+                      </p>
+                      <p className="card-content">
+                        <strong>Nutrition:</strong>{" "}
+                        {prog.nutrition_plans?.length
+                          ? prog.nutrition_plans.length
+                          : "Aucun plan nutritionnel"}
+                      </p>
                     </div>
                   ))}
                 </div>

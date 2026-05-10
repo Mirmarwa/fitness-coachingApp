@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { getProfile, updateProfile } from "../services/api";
+import { API_BASE_URL, authFetchJson, getProfile, updateProfile } from "../services/api";
 
 const goalOptions = [
   { value: "weight_loss", label: "Perte de poids" },
@@ -9,28 +9,54 @@ const goalOptions = [
   { value: "general_fitness", label: "Fitness général" },
 ];
 
+const toInputValue = (value) => {
+  if (value === null || value === undefined) return "";
+  return String(value);
+};
+
 export default function Profile() {
   const [profile, setProfile] = useState({
+    id: null,
     username: "",
     email: "",
+    role: "client",
     weight: "",
     height: "",
-    goal: ""
+    goal: "",
   });
+  const [coachInfo, setCoachInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const isCoach = profile.role === "coach";
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const data = await getProfile();
-        setProfile({
+        const nextProfile = {
+          id: data.id || null,
           username: data.username || "",
           email: data.email || "",
-          weight: data.weight || "",
-          height: data.height || "",
-          goal: data.goal || ""
-        });
-      } catch (error) {
+          role: data.role || localStorage.getItem("user_role") || "client",
+          weight: toInputValue(data.weight),
+          height: toInputValue(data.height),
+          goal: data.goal || "",
+        };
+
+        setProfile(nextProfile);
+
+        if (nextProfile.role === "coach") {
+          try {
+            const coaches = await authFetchJson(`${API_BASE_URL}/coaches/`);
+            const currentCoach = Array.isArray(coaches)
+              ? coaches.find((coach) => String(coach.user) === String(nextProfile.id))
+              : null;
+            setCoachInfo(currentCoach || null);
+          } catch {
+            setCoachInfo(null);
+          }
+        }
+      } catch {
         toast.error("Erreur lors du chargement du profil");
       } finally {
         setLoading(false);
@@ -41,18 +67,33 @@ export default function Profile() {
   }, []);
 
   const handleChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
+    setProfile((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
+    if (isCoach) return;
+
+    const weight = profile.weight === "" ? null : Number(profile.weight);
+    const height = profile.height === "" ? null : Number(profile.height);
+
+    if (profile.weight !== "" && (!Number.isFinite(weight) || weight <= 0)) {
+      toast.error("Le poids doit être un nombre valide.");
+      return;
+    }
+
+    if (profile.height !== "" && (!Number.isFinite(height) || height <= 0)) {
+      toast.error("La taille doit être un nombre valide.");
+      return;
+    }
+
     try {
       await updateProfile({
-        weight: profile.weight,
-        height: profile.height,
-        goal: profile.goal
+        weight,
+        height,
+        goal: profile.goal,
       });
       toast.success("Profil sauvegardé avec succès!");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la sauvegarde du profil");
     }
   };
@@ -118,15 +159,20 @@ export default function Profile() {
             font-weight: 700;
           }
 
-          .profile-input {
+          .profile-input,
+          .profile-static {
             width: 100%;
+            box-sizing: border-box;
             padding: 12px 16px;
             border: 1px solid rgba(15, 118, 110, 0.2);
             border-radius: 12px;
             background: #f8fafc;
             color: #0f172a;
             font-size: 16px;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
+          }
+
+          .profile-static {
+            min-height: 48px;
           }
 
           .profile-input:focus {
@@ -159,94 +205,113 @@ export default function Profile() {
             padding: 40px;
             color: #64748b;
           }
-
-          @media (max-width: 760px) {
-            .profile-page {
-              padding: 28px 16px;
-            }
-
-            .profile-card {
-              padding: 24px;
-            }
-          }
         `}
       </style>
 
       <div className="profile-container">
         <header className="profile-header">
           <p className="profile-kicker">Mon profil</p>
-          <h1 className="profile-title">Informations personnelles</h1>
+          <h1 className="profile-title">
+            {isCoach ? "Profil coach" : "Informations personnelles"}
+          </h1>
         </header>
 
         {loading ? (
           <div className="loading">Chargement du profil...</div>
         ) : (
           <div className="profile-card">
-          <div className="profile-field">
-            <label className="profile-label" htmlFor="username">Nom d'utilisateur</label>
-            <input
-              id="username"
-              type="text"
-              className="profile-input"
-              value={profile.username}
-              onChange={(e) => handleChange("username", e.target.value)}
-            />
-          </div>
+            <div className="profile-field">
+              <label className="profile-label">Nom d'utilisateur</label>
+              <div className="profile-static">{profile.username || "Non disponible"}</div>
+            </div>
 
-          <div className="profile-field">
-            <label className="profile-label" htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              className="profile-input"
-              value={profile.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-            />
-          </div>
+            <div className="profile-field">
+              <label className="profile-label">Email</label>
+              <div className="profile-static">{profile.email || "Non disponible"}</div>
+            </div>
 
-          <div className="profile-field">
-            <label className="profile-label" htmlFor="weight">Poids (kg)</label>
-            <input
-              id="weight"
-              type="number"
-              className="profile-input"
-              value={profile.weight}
-              onChange={(e) => handleChange("weight", Number(e.target.value))}
-            />
-          </div>
+            {isCoach ? (
+              <>
+                <div className="profile-field">
+                  <label className="profile-label">Spécialité</label>
+                  <div className="profile-static">
+                    {coachInfo?.specialty || "Non disponible"}
+                  </div>
+                </div>
 
-          <div className="profile-field">
-            <label className="profile-label" htmlFor="height">Taille (cm)</label>
-            <input
-              id="height"
-              type="number"
-              className="profile-input"
-              value={profile.height}
-              onChange={(e) => handleChange("height", Number(e.target.value))}
-            />
-          </div>
+                <div className="profile-field">
+                  <label className="profile-label">Expérience</label>
+                  <div className="profile-static">
+                    {coachInfo?.experience || coachInfo?.experience === 0
+                      ? `${coachInfo.experience} ans`
+                      : "Non disponible"}
+                  </div>
+                </div>
 
-          <div className="profile-field">
-            <label className="profile-label" htmlFor="goal">Objectif</label>
-            <select
-              id="goal"
-              className="profile-input"
-              value={profile.goal}
-              onChange={(e) => handleChange("goal", e.target.value)}
-            >
-              <option value="">Sélectionnez votre objectif</option>
-              {goalOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div className="profile-field">
+                  <label className="profile-label">Description</label>
+                  <div className="profile-static">
+                    {coachInfo?.description || "Non disponible"}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="profile-field">
+                  <label className="profile-label" htmlFor="weight">
+                    Poids (kg)
+                  </label>
+                  <input
+                    id="weight"
+                    type="number"
+                    min="1"
+                    step="0.1"
+                    className="profile-input"
+                    value={profile.weight}
+                    onChange={(e) => handleChange("weight", e.target.value)}
+                  />
+                </div>
 
-          <button type="button" className="profile-button" onClick={handleSave}>
-            Sauvegarder les modifications
-          </button>
-        </div>
+                <div className="profile-field">
+                  <label className="profile-label" htmlFor="height">
+                    Taille (cm)
+                  </label>
+                  <input
+                    id="height"
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="profile-input"
+                    value={profile.height}
+                    onChange={(e) => handleChange("height", e.target.value)}
+                  />
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-label" htmlFor="goal">
+                    Objectif
+                  </label>
+                  <select
+                    id="goal"
+                    className="profile-input"
+                    value={profile.goal}
+                    onChange={(e) => handleChange("goal", e.target.value)}
+                  >
+                    <option value="">Sélectionnez votre objectif</option>
+                    {goalOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button type="button" className="profile-button" onClick={handleSave}>
+                  Sauvegarder les modifications
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
     </main>

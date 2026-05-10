@@ -22,7 +22,7 @@ export default function Progress() {
     try {
       const data = await getMyProgress();
       setProgressData(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors du chargement des progrès");
     } finally {
       setLoading(false);
@@ -37,15 +37,20 @@ export default function Progress() {
       return;
     }
 
+    const weight = Number(formData.weight);
+    if (!Number.isFinite(weight) || weight <= 0) {
+      toast.error("Le poids doit être un nombre valide.");
+      return;
+    }
+
     try {
-      await addProgress(parseFloat(formData.weight), formData.notes);
+      await addProgress(weight, formData.notes);
       toast.success("Progression ajoutée avec succès!");
       setShowForm(false);
       setFormData({ weight: "", notes: "" });
       loadProgress();
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de l'ajout de la progression");
-      console.error(error);
     }
   };
 

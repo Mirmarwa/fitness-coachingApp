@@ -10,7 +10,7 @@ function CoachRoute({ children }) {
   let isCoach = false;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    isCoach = payload.role === "coach";
+    isCoach = (payload.role || localStorage.getItem("user_role")) === "coach";
     if (!payload || !payload.user_id) {
       throw new Error("Invalid token");
     }

@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { BACKEND_BASE_URL } from "../services/api";
+import { API_BASE_URL, BACKEND_BASE_URL } from "../services/api";
+
+const getRoleFromToken = (token) => {
+  try {
+    return JSON.parse(atob(token.split(".")[1])).role || null;
+  } catch {
+    return null;
+  }
+};
 
 export default function Login() {
   const navigate = useNavigate();
@@ -38,8 +46,27 @@ export default function Login() {
         localStorage.setItem("refresh", data.refresh);
       }
 
+      let role = getRoleFromToken(data.access);
+
+      if (!role) {
+        const profileResponse = await fetch(`${API_BASE_URL}/users/profile/`, {
+          headers: {
+            Authorization: `Bearer ${data.access}`,
+          },
+        });
+
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json();
+          role = profile?.role || null;
+        }
+      }
+
+      if (role) {
+        localStorage.setItem("user_role", role);
+      }
+
       toast.success("Connexion réussie");
-      navigate("/dashboard");
+      navigate(role === "coach" ? "/coach-dashboard" : "/dashboard");
     } catch {
       toast.error("Nom d'utilisateur ou mot de passe incorrect");
     } finally {
@@ -54,8 +81,7 @@ export default function Login() {
           <p style={styles.kicker}>Fitness Coaching</p>
           <h1 style={styles.title}>Connexion</h1>
           <p style={styles.subtitle}>
-            Connectez-vous pour accéder à votre tableau de bord et retrouver vos
-            programmes achetés.
+            Connectez-vous pour accéder à votre espace selon votre rôle.
           </p>
         </div>
 
@@ -205,5 +231,10 @@ const styles = {
     textAlign: "center",
     color: "#334155",
     fontSize: "14px",
+  },
+  link: {
+    color: "#0f766e",
+    fontWeight: 900,
+    textDecoration: "none",
   },
 };

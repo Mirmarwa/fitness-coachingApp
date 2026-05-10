@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { authFetch, API_BASE_URL, BACKEND_BASE_URL, getSubscriptionStatus, getMyProgress } from "../services/api";
+import { API_BASE_URL, BACKEND_BASE_URL, getProfile, getMyProgress } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
 import ProgressStats from "../components/ProgressStats";
 import ProgressCharts from "../components/ProgressCharts";
@@ -11,6 +11,17 @@ const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
 const COACH_SESSION_AMOUNT = 250;
+
+const getRoleFromToken = () => {
+  const token = localStorage.getItem("access");
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1])).role || localStorage.getItem("user_role");
+  } catch {
+    return null;
+  }
+};
 
 function Dashboard() {
   const [payments, setPayments] = useState([]);
@@ -23,6 +34,13 @@ function Dashboard() {
 
 useEffect(() => {
     let isMounted = true;
+
+    if (getRoleFromToken() === "coach") {
+      navigate("/coach-dashboard", { replace: true });
+      return () => {
+        isMounted = false;
+      };
+    }
 
     // Fetch with timeout to prevent infinite loading
     const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
@@ -42,6 +60,21 @@ useEffect(() => {
     const loadDashboard = async () => {
       try {
         const token = localStorage.getItem("access");
+
+        let resolvedRole = getRoleFromToken();
+        if (!resolvedRole) {
+          const profile = await getProfile();
+          resolvedRole = profile?.role || null;
+          if (resolvedRole) {
+            localStorage.setItem("user_role", resolvedRole);
+          }
+        }
+
+        if (resolvedRole === "coach") {
+          navigate("/coach-dashboard", { replace: true });
+          return;
+        }
+
         const paymentsResponse = await fetchWithTimeout(
           `${API_BASE_URL}/payments/my/`,
           { headers: { Authorization: `Bearer ${token}` } },
@@ -100,14 +133,8 @@ useEffect(() => {
           setPrograms(Object.fromEntries(programEntries));
         }
 
-        // Load subscription status
-        try {
-          const subscriptionData = await getSubscriptionStatus();
-          if (isMounted) {
-            setSubscription(subscriptionData);
-          }
-        } catch (error) {
-          console.error("Error loading subscription:", error);
+        if (isMounted) {
+          setSubscription(null);
         }
 
         // Load progress data

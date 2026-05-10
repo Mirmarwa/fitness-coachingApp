@@ -21,6 +21,7 @@ class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = '__all__'
+        read_only_fields = ['coach']
 
 
 class ProgressSerializer(serializers.ModelSerializer):

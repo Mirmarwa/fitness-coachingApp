@@ -2,24 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { authFetch, API_BASE_URL } from "../services/api";
 
-const getUserIdFromToken = (token) => {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.user_id;
-  } catch {
-    return null;
-  }
-};
-
-const getUserRoleFromToken = (token) => {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.role;
-  } catch {
-    return null;
-  }
-};
-
 const getDisplayName = (user) => {
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
   return fullName || user.username || user.email || "";
@@ -32,7 +14,7 @@ export default function Navbar() {
   const [displayName, setDisplayName] = useState(
     localStorage.getItem("user_display_name") || ""
   );
-  const [userRole, setUserRole] = useState(null);
+  const [userRole, setUserRole] = useState(localStorage.getItem("user_role"));
 
   useEffect(() => {
     const token = localStorage.getItem("access");
@@ -54,9 +36,12 @@ export default function Navbar() {
     }
 
     const userId = payload.user_id;
-    const role = payload.role;
+    const role = payload.role || localStorage.getItem("user_role");
 
     setUserRole(role);
+    if (role) {
+      localStorage.setItem("user_role", role);
+    }
 
     if (!token || !userId) {
       setDisplayName("");
@@ -79,6 +64,10 @@ export default function Navbar() {
         if (isMounted) {
           setDisplayName(name);
           localStorage.setItem("user_display_name", name);
+          if (data.role) {
+            setUserRole(data.role);
+            localStorage.setItem("user_role", data.role);
+          }
         }
       } catch {
         if (isMounted) {
@@ -99,6 +88,7 @@ export default function Navbar() {
     localStorage.removeItem("refresh");
     localStorage.removeItem("username");
     localStorage.removeItem("user_display_name");
+    localStorage.removeItem("user_role");
     navigate("/login");
   };
 
@@ -230,7 +220,7 @@ export default function Navbar() {
         <NavLink to="/coaches" className="app-nav-link">
           Coachs
         </NavLink>
-        {isLoggedIn && (
+        {isLoggedIn && userRole !== "coach" && (
           <NavLink to="/dashboard" className="app-nav-link">
             Dashboard
           </NavLink>
@@ -242,9 +232,6 @@ export default function Navbar() {
         )}
         <NavLink to="/articles" className="app-nav-link">
           Articles
-        </NavLink>
-        <NavLink to="/coach" className="app-nav-link">
-          Coach
         </NavLink>
         {isLoggedIn && (
           <NavLink to="/profile" className="app-nav-link">
@@ -261,7 +248,7 @@ export default function Navbar() {
             Rendez-vous
           </NavLink>
         )}
-        {isLoggedIn && (
+        {isLoggedIn && userRole !== "coach" && (
           <NavLink to="/progress" className="app-nav-link">
             Progression
           </NavLink>

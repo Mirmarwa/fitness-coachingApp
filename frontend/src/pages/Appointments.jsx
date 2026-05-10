@@ -51,8 +51,15 @@ const getStatusText = (status) => {
     case "cancelled":
       return "Annulé";
     default:
-      return status;
+      return status || "Non disponible";
   }
+};
+
+const formatDate = (value) => {
+  if (!value) return "Non disponible";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Non disponible";
+  return date.toLocaleDateString("fr-FR");
 };
 
 export default function Appointments() {
@@ -91,7 +98,7 @@ export default function Appointments() {
       setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
 
       if (role === "client") {
-        loadAvailableSlots();
+        await loadAvailableSlots();
       }
     } catch (error) {
       console.error("Appointments load failed:", error);
@@ -592,7 +599,9 @@ export default function Appointments() {
                   <div key={slot.id} className="slot-card">
                     <div className="appointment-header">
                       <div>
-                        <h3 className="appointment-coach">{slot.coach_name}</h3>
+                        <h3 className="appointment-coach">
+                          {slot.coach_name || "Coach non disponible"}
+                        </h3>
                       </div>
                       <span className="appointment-status" style={{ backgroundColor: getStatusColor(slot.status) }}>
                         {getStatusText(slot.status)}
@@ -603,13 +612,13 @@ export default function Appointments() {
                       <div className="slot-detail">
                         <span className="appointment-label">Date</span>
                         <span className="slot-value">
-                          {new Date(slot.date).toLocaleDateString("fr-FR")}
+                          {formatDate(slot.date)}
                         </span>
                       </div>
 
                       <div className="slot-detail">
                         <span className="appointment-label">Heure</span>
-                        <span className="slot-value">{slot.time}</span>
+                        <span className="slot-value">{slot.time || "Non disponible"}</span>
                       </div>
                     </div>
 
@@ -650,7 +659,9 @@ export default function Appointments() {
                   <div className="appointment-header">
                     <div>
                       <h3 className="appointment-coach">
-                        {userRole === "coach" ? appointment.client_name || "Client" : appointment.coach_name}
+                        {userRole === "coach"
+                          ? appointment.client_name || "Client non disponible"
+                          : appointment.coach_name || "Coach non disponible"}
                       </h3>
                     </div>
                     <span className="appointment-status" style={{ backgroundColor: getStatusColor(appointment.status) }}>
@@ -662,13 +673,15 @@ export default function Appointments() {
                     <div className="appointment-detail">
                       <span className="appointment-label">Date</span>
                       <span className="appointment-value">
-                        {new Date(appointment.date).toLocaleDateString("fr-FR")}
+                        {formatDate(appointment.date)}
                       </span>
                     </div>
 
                     <div className="appointment-detail">
                       <span className="appointment-label">Heure</span>
-                      <span className="appointment-value">{appointment.time}</span>
+                      <span className="appointment-value">
+                        {appointment.time || "Non disponible"}
+                      </span>
                     </div>
 
                     {appointment.video_link && (

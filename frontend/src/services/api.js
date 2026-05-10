@@ -94,8 +94,9 @@ export const createAppointmentSlot = async (date, time, notes = '') => {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("CREATE SLOT ERROR:", errorText);
+    const errorBody = await response.json().catch(() => null);
+    const errorText = errorBody?.error || errorBody?.detail || response.statusText;
+    console.error("CREATE SLOT ERROR:", errorBody || errorText);
     throw new Error(errorText || "Erreur création de créneau");
   }
 
