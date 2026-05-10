@@ -9,6 +9,7 @@ from django.db import models
 
 from .models import Coach, Subscription, Message, Appointment
 from .serializers import CoachSerializer, SubscriptionSerializer, MessageSerializer, AppointmentSerializer
+from custom_permissions import IsAppointmentOwnerOrParticipant, IsMessageParticipant
 
 User = get_user_model()
 
@@ -72,7 +73,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsMessageParticipant]
 
     def get_queryset(self):
         return Message.objects.filter(
@@ -137,7 +138,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAppointmentOwnerOrParticipant]
 
     def get_queryset(self):
         user = self.request.user

@@ -10,6 +10,9 @@ from coaching.views import CoachViewSet, SubscriptionViewSet, MessageViewSet, Ap
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+# Import pour Swagger
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
 router = DefaultRouter()
 router.register(r'programs', ProgramViewSet, basename='programs')
 router.register(r'users', UserViewSet, basename='users')
@@ -34,6 +37,10 @@ urlpatterns = [
     # JWT auth
     path('api/token/', TokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
+
+    # Swagger/OpenAPI documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

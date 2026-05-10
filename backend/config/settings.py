@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'payments',
     'coaching',
-
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -135,9 +135,16 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Fitness Coaching API',
+    'DESCRIPTION': 'Documentation API du projet de coaching fitness',
+    'VERSION': '1.0.0',
 }
 

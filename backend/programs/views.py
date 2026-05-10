@@ -1,17 +1,18 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from .models import Program, Exercise, NutritionPlan, Progress
 from .serializers import ProgramSerializer, ProgressSerializer
 from users.models import CustomUser
+from custom_permissions import IsCoachOwnerOrReadOnly
 
 
 class ProgramViewSet(viewsets.ModelViewSet):
     queryset = Program.objects.all()
     serializer_class = ProgramSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, IsCoachOwnerOrReadOnly]
 
     # ---------------- SEED DATA ----------------
     @action(detail=False, methods=['get'], url_path='seed')
@@ -130,6 +131,10 @@ class ProgramViewSet(viewsets.ModelViewSet):
         }
 
         return Response(data)
+
+    def perform_create(self, serializer):
+        # Assure que le programme créé est assigné au coach connecté
+        serializer.save(coach=self.request.user)
 
 
 class ProgressViewSet(viewsets.ModelViewSet):
