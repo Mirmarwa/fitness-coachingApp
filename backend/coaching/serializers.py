@@ -3,9 +3,12 @@ from .models import Coach, Subscription, Message, Appointment
 
 
 class CoachSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    
     class Meta:
         model = Coach
-        fields = '__all__'
+        fields = ['id', 'user', 'username', 'email', 'name', 'specialty', 'experience', 'description', 'price']
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
