@@ -11,21 +11,39 @@ class Payment(models.Model):
         ('failed', 'Failed'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE, null=True)  
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_made')
+    
+    # NOUVEAU: Coach pour tracer paiement → coaching
+    coach = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='coaching_payments',
+        null=True,
+        blank=True,
+        limit_choices_to={'role': 'coach'}
+    )
+    
+    # OPTIONNEL: Garder program pour compatibilité
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, null=True, blank=True)
+    
     amount = models.FloatField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     date = models.DateTimeField(auto_now_add=True)
+    
+    # NOUVEAU: Description (ex: "Séance coaching Samedi 10h")
+    description = models.CharField(max_length=255, blank=True, default="Séance coaching")
 
     class Meta:
-        # Un utilisateur ne peut acheter qu'une seule fois chaque programme (statut completed)
+        # Éviter repeating payment pour même coach
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'program'],
+                fields=['user', 'coach'],
                 condition=models.Q(status='completed'),
-                name='unique_user_program_completed'
+                name='unique_user_coach_payment'
             )
         ]
+        ordering = ['-date']
 
     def __str__(self):
-        return f"{self.user} - {self.program} - {self.status}"
+        coach_name = self.coach.username if self.coach else "Program"
+        return f"{self.user.username} → {coach_name} ({self.status})"

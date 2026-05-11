@@ -15,60 +15,46 @@ User = get_user_model()
 
 
 class CoachViewSet(viewsets.ModelViewSet):
-    queryset = Coach.objects.all()
+    """
+    Retourne tous les coachs avec image et availability
+    """
+    queryset = Coach.objects.filter(user__isnull=False)
     serializer_class = CoachSerializer
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
+    """
+    Gère les relations client → coach payé
+    Créé automatiquement à la première séance payante
+    """
     serializer_class = SubscriptionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Subscription.objects.filter(user=self.request.user)
-
-    @action(detail=False, methods=['post'], url_path='subscribe')
-    def subscribe(self, request):
-        coach_id = request.data.get('coach_id')
-        duration_days = request.data.get('duration_days', 30)  # Default 30 days
-
-        try:
-            coach = User.objects.get(id=coach_id, role='coach')
-        except User.DoesNotExist:
-            return Response({'error': 'Coach not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Check if user already has an active subscription
-        active_subscription = Subscription.objects.filter(
-            user=request.user,
-            status='active'
-        ).first()
-
-        if active_subscription:
-            return Response({'error': 'You already have an active subscription'}, status=status.HTTP_400_BAD_REQUEST)
-
-        end_date = timezone.now() + timedelta(days=duration_days)
-
-        subscription = Subscription.objects.create(
-            user=request.user,
-            coach=coach,
-            end_date=end_date,
-            status='active'
+        """Retourner subscriptions pour le user ou ses clients (si coach)"""
+        return Subscription.objects.filter(
+            models.Q(user=self.request.user) | models.Q(coach=self.request.user)
         )
 
-        serializer = self.get_serializer(subscription)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=False, methods=['get'], url_path='status')
-    def get_status(self, request):
-        subscription = Subscription.objects.filter(
+    @action(detail=False, methods=['get'], url_path='my-coaches')
+    def my_coaches(self, request):
+        """GET /api/subscriptions/my-coaches/ - Mes coachs actifs (client)"""
+        subscriptions = Subscription.objects.filter(
             user=request.user,
             status='active'
-        ).first()
+        )
+        serializer = self.get_serializer(subscriptions, many=True)
+        return Response(serializer.data)
 
-        if subscription:
-            serializer = self.get_serializer(subscription)
-            return Response(serializer.data)
-        else:
-            return Response({'message': 'No active subscription'}, status=status.HTTP_404_NOT_FOUND)
+    @action(detail=False, methods=['get'], url_path='my-clients')
+    def my_clients(self, request):
+        """GET /api/subscriptions/my-clients/ - Mes clients actifs (coach)"""
+        subscriptions = Subscription.objects.filter(
+            coach=request.user,
+            status='active'
+        )
+        serializer = self.get_serializer(subscriptions, many=True)
+        return Response(serializer.data)
 
 
 class MessageViewSet(viewsets.ModelViewSet):
@@ -80,8 +66,26 @@ class MessageViewSet(viewsets.ModelViewSet):
             models.Q(sender=self.request.user) | models.Q(receiver=self.request.user)
         ).order_by('-created_at')
 
+    def perform_create(self, serializer):
+        """Ajouter sender automatiquement"""
+        serializer.save(sender=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='with-coach')
+    def with_coach(self, request):
+        """GET /api/messages/with-coach/?coach_id=<id> - Messages avec un coach"""
+        coach_id = request.query_params.get('coach_id')
+        if not coach_id:
+            return Response({'error': 'coach_id required'}, status=400)
+
+        messages = self.get_queryset().filter(
+            models.Q(sender_id=coach_id) | models.Q(receiver_id=coach_id)
+        )
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'], url_path='contacts')
     def contacts(self, request):
+        """Contacts avec qui on a discuté"""
         messages = self.get_queryset().order_by('-created_at')
         contacts_map = {}
 
@@ -90,50 +94,13 @@ class MessageViewSet(viewsets.ModelViewSet):
             if partner.id not in contacts_map:
                 contacts_map[partner.id] = {
                     'id': partner.id,
-                    'name': partner.username,
+                    'username': partner.username,
                     'lastMessage': message.content,
                     'timestamp': message.created_at,
                 }
 
-        contacts = sorted(contacts_map.values(), key=lambda item: item['timestamp'], reverse=True)
+        contacts = sorted(contacts_map.values(), key=lambda x: x['timestamp'], reverse=True)
         return Response(contacts)
-
-    @action(detail=False, methods=['get'], url_path='conversation/(?P<user_id>\d+)')
-    def conversation(self, request, user_id=None):
-        try:
-            other_user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        messages = Message.objects.filter(
-            (models.Q(sender=request.user) & models.Q(receiver=other_user)) |
-            (models.Q(sender=other_user) & models.Q(receiver=request.user))
-        ).order_by('created_at')
-
-        serializer = self.get_serializer(messages, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['post'], url_path='send')
-    def send_message(self, request):
-        receiver_id = request.data.get('receiver_id')
-        content = request.data.get('content')
-
-        if not content or not content.strip():
-            return Response({'error': 'Message content is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            receiver = User.objects.get(id=receiver_id)
-        except User.DoesNotExist:
-            return Response({'error': 'Receiver not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        message = Message.objects.create(
-            sender=request.user,
-            receiver=receiver,
-            content=content.strip()
-        )
-
-        serializer = self.get_serializer(message)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
