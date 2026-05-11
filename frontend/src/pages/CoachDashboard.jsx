@@ -106,7 +106,7 @@ export default function CoachDashboard() {
       toast.success("Programme créé !");
       await loadCoachData();
     } catch (error) {
-      toast.error("Erreur création programme");
+      toast.error("Erreur lors de la création du programme");
       console.error(error);
     }
   };

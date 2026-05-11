@@ -1,39 +1,48 @@
-export default function CoachCard({ name, specialty, price, rating, badges = [], stats = [] }) {
-  const stars = Array.from({ length: 5 }, (_, index) => index < Math.round(rating) ? "★" : "☆").join("");
+import { Link } from "react-router-dom";
+export default function CoachCard({ coach }) {
+  if (!coach) return null;
+
+  const {
+    username = "Non renseigné",
+    email = "Non renseigné",
+    specialty = "Aucune spécialité",
+    experience = 0,
+    description = "Aucune description",
+    price = 0,
+  } = coach;
 
   return (
     <div style={styles.card}>
       <div style={styles.topRow}>
         <div>
-          <h3 style={styles.title}>{name}</h3>
-          <p style={styles.specialty}>{specialty}</p>
+          <h3 style={styles.title}>{username}</h3>
+          <p style={styles.specialty}>{specialty || "Non renseigné"}</p>
         </div>
-        <span style={styles.price}>{price}</span>
+        <span style={styles.price}>{price > 0 ? `${price} MAD` : "Gratuit"}</span>
       </div>
 
-      <div style={styles.ratingRow}>
-        <span style={styles.stars}>{stars}</span>
-        <span style={styles.ratingValue}>{rating.toFixed(1)}</span>
+      <div style={styles.infoRow}>
+        <span style={styles.infoLabel}>Email:</span>
+        <span style={styles.infoValue}>{email}</span>
       </div>
 
-      <div style={styles.badgeRow}>
-        {badges.map((badge) => (
-          <span key={badge} style={styles.badge}>
-            {badge}
-          </span>
-        ))}
+      <div style={styles.infoRow}>
+        <span style={styles.infoLabel}>Expérience:</span>
+        <span style={styles.infoValue}>{experience} ans</span>
       </div>
 
-      <div style={styles.statsGrid}>
-        {stats.map((item) => (
-          <div key={item.label} style={styles.statItem}>
-            <span style={styles.statLabel}>{item.label}</span>
-            <span style={styles.statValue}>{item.value}</span>
-          </div>
-        ))}
+      <div style={styles.descriptionBox}>
+        <span style={styles.descriptionLabel}>À propos:</span>
+        <p style={styles.descriptionText}>
+          {description || "Aucune description"}
+        </p>
       </div>
 
-      <button style={styles.button}>Voir le profil</button>
+      <Link to={`/coach/${coach.id}`}>
+  <button style={styles.button}>
+    Voir le profil
+  </button>
+</Link>
     </div>
   );
 }
@@ -41,7 +50,7 @@ export default function CoachCard({ name, specialty, price, rating, badges = [],
 const styles = {
   card: {
     display: "grid",
-    gap: "18px",
+    gap: "16px",
     padding: "24px",
     borderRadius: "28px",
     background: "linear-gradient(180deg, #ffffff 0%, #f8fdfb 100%)",
@@ -61,6 +70,7 @@ const styles = {
     margin: 0,
     fontSize: "20px",
     color: "#0f172a",
+    fontWeight: 900,
   },
   specialty: {
     margin: "8px 0 0",
@@ -76,54 +86,37 @@ const styles = {
     fontSize: "14px",
     whiteSpace: "nowrap",
   },
-  ratingRow: {
+  infoRow: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "8px",
+    fontSize: "14px",
   },
-  stars: {
-    color: "#f59e0b",
-    fontSize: "18px",
-    lineHeight: 1,
-  },
-  ratingValue: {
+  infoLabel: {
+    fontWeight: 700,
     color: "#0f766e",
-    fontWeight: 700,
+    minWidth: "90px",
   },
-  badgeRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "10px",
+  infoValue: {
+    color: "#475569",
   },
-  badge: {
-    padding: "8px 12px",
-    borderRadius: "999px",
-    background: "#ecfdf5",
-    color: "#166534",
-    fontSize: "12px",
-    fontWeight: 700,
-  },
-  statsGrid: {
+  descriptionBox: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "12px",
-  },
-  statItem: {
-    display: "grid",
-    gap: "4px",
-    padding: "14px",
-    borderRadius: "18px",
+    gap: "8px",
+    padding: "12px",
+    borderRadius: "14px",
     background: "#f8fafc",
   },
-  statLabel: {
-    fontSize: "12px",
-    color: "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
+  descriptionLabel: {
+    fontWeight: 700,
+    color: "#0f766e",
+    fontSize: "13px",
   },
-  statValue: {
-    fontWeight: 900,
-    color: "#0f172a",
+  descriptionText: {
+    margin: 0,
+    color: "#475569",
+    fontSize: "13px",
+    lineHeight: "1.5",
   },
   button: {
     width: "100%",

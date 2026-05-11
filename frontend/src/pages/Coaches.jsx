@@ -1,60 +1,48 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CoachCard from "../components/CoachCard";
-
-const coaches = [
-  {
-    id: 1,
-    name: "Coach Ahmed",
-    specialty: "Musculation",
-    price: "200 MAD/mois",
-    rating: 4.9,
-    badges: ["Top Coach", "Premium"],
-    stats: [
-      { label: "Clients accompagnés", value: "120+" },
-      { label: "Satisfaction", value: "98%" },
-      { label: "Séances", value: "1.200" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Coach Sara",
-    specialty: "Nutrition",
-    price: "250 MAD/mois",
-    rating: 4.8,
-    badges: ["Expert Nutrition", "Premium"],
-    stats: [
-      { label: "Clients accompagnés", value: "95+" },
-      { label: "Satisfaction", value: "96%" },
-      { label: "Séances", value: "980" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Coach Yassine",
-    specialty: "Perte de poids",
-    price: "220 MAD/mois",
-    rating: 4.7,
-    badges: ["Coach Bien-être"],
-    stats: [
-      { label: "Clients accompagnés", value: "110+" },
-      { label: "Satisfaction", value: "94%" },
-      { label: "Séances", value: "1.050" },
-    ],
-  },
-];
-
-const specialties = ["Tous", "Musculation", "Nutrition", "Perte de poids"];
+import { API_BASE_URL } from "../services/api";
+import toast from "react-hot-toast";
 
 export default function Coaches() {
+  const [coaches, setCoaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState("Tous");
+
+  useEffect(() => {
+    const loadCoaches = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`${API_BASE_URL}/coaches/`);
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement des coachs");
+        }
+        const data = await response.json();
+        setCoaches(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message);
+        toast.error("Impossible de charger les coachs");
+        setCoaches([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCoaches();
+  }, []);
+
+  const uniqueSpecialties = useMemo(() => {
+    const specialties = new Set(coaches.map((c) => c.specialty).filter(Boolean));
+    return ["Tous", ...Array.from(specialties).sort()];
+  }, [coaches]);
 
   const filteredCoaches = useMemo(() => {
     if (selectedSpecialty === "Tous") {
       return coaches;
     }
-
     return coaches.filter((coach) => coach.specialty === selectedSpecialty);
-  }, [selectedSpecialty]);
+  }, [coaches, selectedSpecialty]);
 
   return (
     <main className="coaches-page">
@@ -129,6 +117,7 @@ export default function Coaches() {
             align-items: stretch;
           }
 
+          .loading-state,
           .empty-state {
             margin-top: 24px;
             padding: 40px 24px;
@@ -139,16 +128,28 @@ export default function Coaches() {
             box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
           }
 
+          .loading-state h2,
           .empty-state h2 {
             margin: 0 0 10px;
             font-size: 24px;
             color: #0f172a;
           }
 
+          .loading-state p,
           .empty-state p {
             margin: 0;
             color: #667085;
             line-height: 1.7;
+          }
+
+          .error-state {
+            margin-top: 24px;
+            padding: 20px 24px;
+            border-radius: 16px;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            text-align: center;
           }
 
           @media (max-width: 900px) {
@@ -178,11 +179,11 @@ export default function Coaches() {
       <div className="coaches-container">
         <section className="coaches-hero">
           <div>
-            <p className="filter-label">Coachs Premium</p>
-            <h1>Nos meilleurs coachs</h1>
+            <p className="filter-label">Coachs Disponibles</p>
+            <h1>Nos coachs</h1>
             <p>
-              Découvrez une sélection de coachs haut de gamme, certifiés et
-              spécialisés pour vous accompagner avec un suivi motivant et efficace.
+              Découvrez les coachs spécialisés disponibles pour vous accompagner
+              dans votre parcours fitness.
             </p>
           </div>
 
@@ -196,7 +197,7 @@ export default function Coaches() {
               value={selectedSpecialty}
               onChange={(event) => setSelectedSpecialty(event.target.value)}
             >
-              {specialties.map((specialty) => (
+              {uniqueSpecialties.map((specialty) => (
                 <option key={specialty} value={specialty}>
                   {specialty}
                 </option>
@@ -205,7 +206,22 @@ export default function Coaches() {
           </div>
         </section>
 
-        {filteredCoaches.length === 0 ? (
+        {loading ? (
+          <div className="loading-state">
+            <h2>Chargement...</h2>
+            <p>Récupération des coachs disponibles.</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <h2>Erreur</h2>
+            <p>{error}</p>
+          </div>
+        ) : coaches.length === 0 ? (
+          <div className="empty-state">
+            <h2>Aucun coach disponible</h2>
+            <p>Revenez plus tard pour de nouvelles offres.</p>
+          </div>
+        ) : filteredCoaches.length === 0 ? (
           <div className="empty-state">
             <h2>Aucun coach trouvé</h2>
             <p>Essayez un autre filtre ou revenez plus tard pour de nouvelles offres.</p>
@@ -213,15 +229,7 @@ export default function Coaches() {
         ) : (
           <div className="coaches-grid">
             {filteredCoaches.map((coach) => (
-              <CoachCard
-                key={coach.id}
-                name={coach.name}
-                specialty={coach.specialty}
-                price={coach.price}
-                rating={coach.rating}
-                badges={coach.badges}
-                stats={coach.stats}
-              />
+              <CoachCard key={coach.id} coach={coach} />
             ))}
           </div>
         )}

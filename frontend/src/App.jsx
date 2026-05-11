@@ -22,6 +22,8 @@ import CoachRoute from "./components/CoachRoute";
 
 
 
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -42,9 +44,11 @@ function App() {
           <Route path="/coach-dashboard" element={<CoachRoute><CoachDashboard /></CoachRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><Progress /></PrivateRoute>} />
+          <Route path="/coach/:id" element={<Coach />} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/appointments" element={<PrivateRoute><Appointments /></PrivateRoute>} />
           <Route path="*" element={<NotFound />} />
+
         </Routes>
       </main>
 
