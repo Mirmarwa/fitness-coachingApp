@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { API_BASE_URL, BACKEND_BASE_URL, getProfile, getMyProgress } from "../services/api";
+import {
+  API_BASE_URL,
+  BACKEND_BASE_URL,
+  getProfile,
+  getMyProgress,
+} from "../services/api";
 import ProgramCard from "../components/ProgramCard";
 import ProgressStats from "../components/ProgressStats";
 import ProgressCharts from "../components/ProgressCharts";
@@ -17,7 +22,10 @@ const getRoleFromToken = () => {
   if (!token) return null;
 
   try {
-    return JSON.parse(atob(token.split(".")[1])).role || localStorage.getItem("user_role");
+    return (
+      JSON.parse(atob(token.split(".")[1])).role ||
+      localStorage.getItem("user_role")
+    );
   } catch {
     return null;
   }
@@ -28,11 +36,10 @@ function Dashboard() {
   const [programs, setPrograms] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [subscription, setSubscription] = useState(null);
   const [progressData, setProgressData] = useState([]);
   const navigate = useNavigate();
 
-useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
 
     if (getRoleFromToken() === "coach") {
@@ -47,7 +54,10 @@ useEffect(() => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
       try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+        });
         clearTimeout(timeoutId);
         return response;
       } catch (error) {
@@ -78,7 +88,7 @@ useEffect(() => {
         const paymentsResponse = await fetchWithTimeout(
           `${API_BASE_URL}/payments/my/`,
           { headers: { Authorization: `Bearer ${token}` } },
-          8000
+          8000,
         );
 
         if (!isMounted) return;
@@ -106,7 +116,7 @@ useEffect(() => {
           .map((payment) =>
             typeof payment.program === "object"
               ? payment.program?.id
-              : payment.program
+              : payment.program,
           )
           .filter(Boolean);
 
@@ -118,7 +128,7 @@ useEffect(() => {
               const programResponse = await fetchWithTimeout(
                 `${API_BASE_URL}/programs/${programId}/`,
                 { headers: { Authorization: `Bearer ${token}` } },
-                5000
+                5000,
               );
               if (!programResponse.ok) return [programId, null];
               const programData = await programResponse.json();
@@ -126,22 +136,20 @@ useEffect(() => {
             } catch {
               return [programId, null];
             }
-          })
+          }),
         );
 
         if (isMounted) {
           setPrograms(Object.fromEntries(programEntries));
         }
 
-        if (isMounted) {
-          setSubscription(null);
-        }
-
         // Load progress data
         try {
           const progressDataResult = await getMyProgress();
           if (isMounted) {
-            setProgressData(Array.isArray(progressDataResult) ? progressDataResult : []);
+            setProgressData(
+              Array.isArray(progressDataResult) ? progressDataResult : [],
+            );
           }
         } catch (error) {
           console.error("Error loading progress:", error);
@@ -196,70 +204,13 @@ useEffect(() => {
 
   const totalPaid = payments.reduce(
     (total, payment) => total + Number(payment.amount || 0),
-    0
+    0,
   );
-
-  const coachSubscription = useMemo(() => {
-    if (!subscription) {
-      return {
-        paid: false,
-        amount: COACH_SESSION_AMOUNT,
-        endDate: null,
-        isActive: false,
-        available: false,
-      };
-    }
-
-    return {
-      paid: true,
-      amount: subscription.amount || COACH_SESSION_AMOUNT,
-      endDate: subscription.end_date,
-      isActive: subscription.is_active,
-      available: subscription.is_active,
-    };
-  }, [subscription]);
-
-  const totalWithCoach = totalPaid + (coachSubscription.paid ? coachSubscription.amount : 0);
-
-  const onboarding = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("onboarding");
-      if (!raw) return {};
-      if (raw === "true") return {};
-      const parsed = JSON.parse(raw);
-      if (parsed?.data) {
-        return {
-          ...parsed.data,
-          program: parsed.program,
-        };
-      }
-      if (parsed?.title || parsed?.description) {
-        return parsed;
-      }
-      return parsed;
-    } catch {
-      return {};
-    }
-  }, []);
 
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return PLACEHOLDER_IMAGE;
     if (image.startsWith("http")) return image;
     return `${BACKEND_BASE_URL}${image}`;
-  };
-
-  const formatGoal = (goal) => {
-    if (!goal) return "Non défini";
-    const goalMap = {
-      "lose weight": "Perte de poids",
-      "gain muscle": "Prise de muscle",
-      "maintain fitness": "Maintien",
-      "weight_loss": "Perte de poids",
-      "muscle_gain": "Prise de muscle",
-      "maintenance": "Maintien",
-      "general_fitness": "Fitness général",
-    };
-    return goalMap[goal] || goal;
   };
 
   const formatPrice = (amount) => `${Number(amount || 0).toFixed(2)} DH`;
@@ -279,7 +230,9 @@ useEffect(() => {
       return "Un programme fitness clair, motivant et facile à suivre.";
     }
 
-    return description.length > 115 ? `${description.slice(0, 115)}...` : description;
+    return description.length > 115
+      ? `${description.slice(0, 115)}...`
+      : description;
   };
 
   return (
@@ -295,8 +248,9 @@ useEffect(() => {
           }
 
           .dashboard-container {
-            width: min(1160px, 100%);
+            width: min(1080px, 100%);
             margin: 0 auto;
+            padding: 0 12px;
           }
 
           .dashboard-header {
@@ -304,7 +258,7 @@ useEffect(() => {
             grid-template-columns: 1fr auto;
             align-items: end;
             gap: 24px;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
           }
 
           .dashboard-kicker {
@@ -362,29 +316,35 @@ useEffect(() => {
 
           .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 18px;
-            margin-bottom: 34px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            margin: 40px auto;
+            justify-items: center;
+            width: 100%;
           }
 
           .stat-card {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 22px;
-            border-radius: 20px;
+            justify-content: flex-start;
+            gap: 24px;
+            padding: 34px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 450px;
+            min-height: 170px;
           }
 
           .stat-icon {
             display: grid;
             place-items: center;
-            width: 52px;
-            height: 52px;
-            flex: 0 0 52px;
-            border-radius: 16px;
+            width: 78px;
+            height: 78px;
+            flex: 0 0 78px;
+            border-radius: 22px;
             background: #dcfce7;
             color: #166534;
-            font-size: 24px;
+            font-size: 34px;
           }
 
           .stat-card:nth-child(2) .stat-icon {
@@ -392,24 +352,21 @@ useEffect(() => {
             color: #0f766e;
           }
 
-          .stat-card:nth-child(3) .stat-icon {
-            background: #f0fdf4;
-            color: #15803d;
-          }
-
           .stat-label {
-            margin: 0 0 6px;
+            margin: 0 0 10px;
             color: #64748b;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
           }
 
           .stat-value {
             margin: 0;
             color: #0f172a;
-            font-size: 28px;
+            font-size: 42px;
             font-weight: 900;
+            line-height: 1;
           }
 
           .section-heading {
@@ -436,60 +393,12 @@ useEffect(() => {
             color: #115e59;
           }
 
-          .coach-subscription-card {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 18px;
-            align-items: center;
-            margin-bottom: 34px;
-            padding: 24px;
-            border-radius: 22px;
-            background: linear-gradient(135deg, #0f766e, #16a34a);
-            color: white;
-            box-shadow: 0 24px 60px rgba(15, 118, 110, 0.2);
+          .dashboard-container > section {
+            margin-bottom: 48px;
           }
 
-          .coach-subscription-card h2 {
-            margin: 0 0 10px;
-            font-size: 25px;
-          }
-
-          .coach-subscription-card p {
-            margin: 0;
-            color: #dcfce7;
-            line-height: 1.6;
-          }
-
-          .coach-subscription-meta {
-            display: grid;
-            gap: 10px;
-            min-width: 230px;
-          }
-
-          .coach-subscription-meta span {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.14);
-            font-weight: 850;
-          }
-
-          .coach-subscription-link {
-            display: inline-flex;
-            width: fit-content;
-            margin-top: 16px;
-            min-height: 44px;
-            align-items: center;
-            justify-content: center;
-            padding: 0 16px;
-            border-radius: 14px;
-            background: white;
-            color: #0f766e;
-            text-decoration: none;
-            font-weight: 900;
-            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+          .dashboard-container > section:last-of-type {
+            margin-bottom: 0;
           }
 
           .program-grid {
@@ -591,6 +500,7 @@ useEffect(() => {
             text-decoration: none;
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
           }
+            
 
           .program-button:hover {
             transform: translateY(-2px);
@@ -637,31 +547,38 @@ useEffect(() => {
             line-height: 1.6;
           }
 
-          @media (max-width: 760px) {
-            .dashboard-page {
-              padding: 28px 16px;
-            }
+          @media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 
-            .dashboard-header {
-              grid-template-columns: 1fr;
-            }
+  .stat-card {
+    max-width: 100%;
+  }
+}
 
-            .header-card {
-              min-width: 0;
-            }
+@media (max-width: 760px) {
+  .dashboard-page {
+    padding: 28px 16px;
+  }
 
-            .stats-grid {
-              grid-template-columns: 1fr;
-            }
+  .dashboard-header {
+    grid-template-columns: 1fr;
+  }
 
-            .coach-subscription-card {
-              grid-template-columns: 1fr;
-            }
+  .header-card {
+    min-width: 0;
+  }
 
-            .coach-subscription-meta {
-              min-width: 0;
-            }
-          }
+  .stat-card {
+    padding: 24px;
+    min-height: 140px;
+  }
+
+  .stat-value {
+    font-size: 32px;
+  }
+}
         `}
       </style>
 
@@ -682,7 +599,10 @@ useEffect(() => {
           </div>
         </header>
 
-        <section className="stats-grid" aria-label="Statistiques du tableau de bord">
+        <section
+          className="stats-grid"
+          aria-label="Statistiques du tableau de bord"
+        >
           <div className="stat-card">
             <div className="stat-icon">🏋️</div>
             <div>
@@ -695,51 +615,8 @@ useEffect(() => {
             <div className="stat-icon">💳</div>
             <div>
               <p className="stat-label">Total payé</p>
-              <p className="stat-value">{formatPrice(totalWithCoach)}</p>
+              <p className="stat-value">{formatPrice(totalPaid)}</p>
             </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">👤</div>
-            <div>
-              <p className="stat-label">Coach</p>
-              <p className="stat-value">{coachSubscription.paid ? "Payé" : "Non payé"}</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div>
-              <p className="stat-label">Objectif</p>
-              <p className="stat-value">{formatGoal(onboarding.goal)}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="coach-subscription-card">
-          <div>
-            <h2>Abonnement coach</h2>
-            <p>
-              Suivez l'état de votre séance coach premium, la disponibilité du
-              coach et la date de fin de l'abonnement.
-            </p>
-            <Link className="coach-subscription-link" to="/coach">
-              Gérer le coach
-            </Link>
-          </div>
-          <div className="coach-subscription-meta">
-            <span>
-              <strong>Coach payé</strong>
-              <em>{coachSubscription.paid ? "Oui" : "Non"}</em>
-            </span>
-            <span>
-              <strong>Disponible</strong>
-              <em>{coachSubscription.available ? "Oui" : "Non"}</em>
-            </span>
-            <span>
-              <strong>Fin</strong>
-              <em>{coachSubscription.paid ? formatDate(coachSubscription.endDate) : "-"}</em>
-            </span>
           </div>
         </section>
 
@@ -789,52 +666,57 @@ useEffect(() => {
             </div>
           ) : (
             <div className="program-grid">
-              {purchasedPrograms.map(({ payment, program, programId }, index) => {
-                const resolvedProgramId = program?.id || programId;
+              {purchasedPrograms.map(
+                ({ payment, program, programId }, index) => {
+                  const resolvedProgramId = program?.id || programId;
 
-                return (
-                  <article
-                    className="program-card"
-                    key={payment.id || `${resolvedProgramId || "program"}-${index}`}
-                  >
-                    <div className="program-image-box">
-                      <img
-                        className="program-image"
-                        src={getImageUrl(program?.image)}
-                        alt={program?.title || "Programme fitness"}
-                        onError={(event) => {
-                          event.currentTarget.src = PLACEHOLDER_IMAGE;
-                        }}
-                      />
-                      <span className="paid-badge">✔️ Payé</span>
-                    </div>
-
-                    <div className="program-content">
-                      <div className="program-topline">
-                        <h3 className="program-title">
-                          {program?.title || "Programme fitness"}
-                        </h3>
-                        <span className="program-price">
-                          {formatPrice(payment.amount)}
-                        </span>
+                  return (
+                    <article
+                      className="program-card"
+                      key={
+                        payment.id ||
+                        `${resolvedProgramId || "program"}-${index}`
+                      }
+                    >
+                      <div className="program-image-box">
+                        <img
+                          className="program-image"
+                          src={getImageUrl(program?.image)}
+                          alt={program?.title || "Programme fitness"}
+                          onError={(event) => {
+                            event.currentTarget.src = PLACEHOLDER_IMAGE;
+                          }}
+                        />
+                        <span className="paid-badge">✔️ Payé</span>
                       </div>
 
-                      <p className="program-description">
-                        {getShortDescription(program?.description)}
-                      </p>
+                      <div className="program-content">
+                        <div className="program-topline">
+                          <h3 className="program-title">
+                            {program?.title || "Programme fitness"}
+                          </h3>
+                          <span className="program-price">
+                            {formatPrice(payment.amount)}
+                          </span>
+                        </div>
 
-                      {resolvedProgramId && (
-                        <Link
-                          className="program-button"
-                          to={`/program/${resolvedProgramId}`}
-                        >
-                          Voir le programme
-                        </Link>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+                        <p className="program-description">
+                          {getShortDescription(program?.description)}
+                        </p>
+
+                        {resolvedProgramId && (
+                          <Link
+                            className="program-button"
+                            to={`/program/${resolvedProgramId}`}
+                          >
+                            Voir le programme
+                          </Link>
+                        )}
+                      </div>
+                    </article>
+                  );
+                },
+              )}
             </div>
           )}
         </section>

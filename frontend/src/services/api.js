@@ -75,10 +75,18 @@ export const getConversation = async (userId) => {
   return authFetchJson(`${API_BASE_URL}/messages/conversation/${userId}/`);
 };
 
-export const sendMessage = async (receiverId, content) => {
+export const sendMessage = async (receiverId, coachId, content) => {
+  if (!content.trim()) return;
+
+  const payload = {
+    receiver_id: receiverId,
+    coach_id: coachId,
+    content,
+  };
+
   return authFetchJson(`${API_BASE_URL}/messages/send/`, {
-    method: 'POST',
-    body: JSON.stringify({ receiver_id: receiverId, content }),
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 };
 

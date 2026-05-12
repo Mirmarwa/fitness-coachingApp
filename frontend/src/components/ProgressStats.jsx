@@ -6,7 +6,9 @@ export default function ProgressStats({ data }) {
   const weights = data.map((item) => parseFloat(item.weight));
   const currentWeight = weights[weights.length - 1];
   const initialWeight = weights[0];
-  const avgWeight = (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1);
+  const avgWeight = (
+    weights.reduce((a, b) => a + b, 0) / weights.length
+  ).toFixed(1);
   const evolution = (currentWeight - initialWeight).toFixed(1);
   const evolutionPercent = ((evolution / initialWeight) * 100).toFixed(1);
   const isLosing = evolution < 0;
@@ -17,8 +19,8 @@ export default function ProgressStats({ data }) {
         {`
           .progress-stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
             margin: 24px 0;
           }
 
@@ -74,7 +76,7 @@ export default function ProgressStats({ data }) {
 
           @media (max-width: 760px) {
             .progress-stats-container {
-              grid-template-columns: repeat(2, 1fr);
+              grid-template-columns: 1fr;
             }
 
             .stat-value {
@@ -104,15 +106,16 @@ export default function ProgressStats({ data }) {
       </div>
 
       <div className="stat-card">
-        <div className="stat-icon">{isLosing ? '📉' : '📈'}</div>
+        <div className="stat-icon">{isLosing ? "📉" : "📈"}</div>
         <p className="stat-label">Évolution</p>
         <p className="stat-value">
-          <span className={isLosing ? 'stat-negative' : 'stat-positive'}>
-            {evolution > 0 ? '+' : ''}{evolution}
+          <span className={isLosing ? "stat-negative" : "stat-positive"}>
+            {evolution > 0 ? "+" : ""}
+            {evolution}
           </span>
         </p>
         <p className="stat-detail">
-          <span className={isLosing ? 'stat-negative' : 'stat-positive'}>
+          <span className={isLosing ? "stat-negative" : "stat-positive"}>
             {evolutionPercent}%
           </span>
         </p>

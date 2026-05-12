@@ -109,24 +109,17 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedUser) return;
 
     try {
-      const response = await sendMessage(selectedUser.id, newMessage.trim());
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: response.id,
-          sender: response.sender,
-          receiver: response.receiver,
-          sender_name: response.sender_name || "Vous",
-          receiver_name: response.receiver_name,
-          content: response.content,
-          created_at: response.created_at,
-          is_read: response.is_read,
-        },
-      ]);
+      console.log(selectedUser);
+      await sendMessage(
+  selectedUser.id,
+  null,
+  newMessage
+);
       setNewMessage("");
-      toast.success("Message envoyé!");
+      toast.success("Message envoyé");
+      await loadConversation(selectedUser.id);
     } catch (error) {
-      toast.error("Erreur lors de l'envoi du message");
+      toast.error(error.message || "Erreur lors de l'envoi du message");
       console.error(error);
     }
   };
@@ -374,8 +367,8 @@ export default function Messages() {
           ) : contacts.length === 0 ? (
             <div className="empty-state">
               <div>
-                <h2>Aucun message</h2>
-                <p>Vous n'avez encore aucun message avec vos coachs.</p>
+                <h2>Aucune conversation disponible.</h2>
+                <p>Vous n'avez encore aucune conversation à afficher.</p>
               </div>
             </div>
           ) : (
@@ -397,7 +390,7 @@ export default function Messages() {
           {selectedUser ? (
             <>
               <div className="chat-header">
-                <h2 className="chat-title">Conversation avec {selectedUser.name}</h2>
+                <h2 className="chat-title">Conversation avec {selectedUser.name || selectedUser.username}</h2>
               </div>
 
               <div className="messages-container">
@@ -454,8 +447,8 @@ export default function Messages() {
           ) : (
             <div className="empty-state">
               <div>
-                <h2>Sélectionnez une conversation</h2>
-                <p>Cliquez sur un coach pour commencer à discuter.</p>
+                <h2>Sélectionnez un coach pour commencer.</h2>
+                <p>Choisissez une conversation pour afficher et envoyer des messages.</p>
               </div>
             </div>
           )}

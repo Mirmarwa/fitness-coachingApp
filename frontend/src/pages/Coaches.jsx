@@ -2,12 +2,43 @@ import { useEffect, useMemo, useState } from "react";
 import CoachCard from "../components/CoachCard";
 import { API_BASE_URL } from "../services/api";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Coaches() {
+  const navigate = useNavigate();
   const [coaches, setCoaches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState("Tous");
+
+  const getRoleFromToken = () => {
+    const token = localStorage.getItem("access");
+    if (!token) return null;
+
+    try {
+      return JSON.parse(atob(token.split(".")[1])).role;
+    } catch {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const tokenRole = getRoleFromToken();
+    let userRole = null;
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      userRole = user?.role;
+    } catch {
+      userRole = null;
+    }
+
+    const role = tokenRole || userRole || localStorage.getItem("user_role");
+
+    if (role === "coach") {
+      navigate("/coach-dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const loadCoaches = async () => {

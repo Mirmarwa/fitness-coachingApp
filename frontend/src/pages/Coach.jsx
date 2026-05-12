@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams}from "react-router-dom";
 import { API_BASE_URL } from "../services/api";
 import toast from "react-hot-toast";
+
 
 
 const COACH_IMAGE =
@@ -10,14 +11,15 @@ const COACH_IMAGE =
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80";
 
-const COACH_SESSION_AMOUNT = 250;
-const COACH_SUBSCRIPTION_DAYS = 30;
 
 export default function Coach() {
+
   const { id } = useParams();
+  
 
   const [coachData, setCoachData] = useState(null);
   const [message, setMessage] = useState("");
+  
 
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -25,8 +27,11 @@ export default function Coach() {
     text: "",
   });
 
-  const [coachPaid, setCoachPaid] = useState(false);
+  const [coachPaid, setCoachPaid] = useState(
+  localStorage.getItem(`coach_paid_${id}`) === "true"
+);
   const [payingCoach, setPayingCoach] = useState(false);
+ 
 
   useEffect(() => {
     const loadCoach = async () => {
@@ -67,25 +72,28 @@ export default function Coach() {
   };
 
   const handleCoachPayment = () => {
-    if (coachPaid || payingCoach) return;
+  if (coachPaid || payingCoach) return;
 
-    setPayingCoach(true);
+  setPayingCoach(true);
 
-    window.setTimeout(() => {
-      setCoachPaid(true);
-      setPayingCoach(false);
+  window.setTimeout(() => {
+    setCoachPaid(true);
 
-      setMessage(
-        "Paiement confirmé. Votre séance coach premium est activée."
-      );
+    localStorage.setItem(`coach_paid_${id}`, "true");
 
-      toast.success("Paiement coach confirmé");
-    }, 900);
-  };
+    setPayingCoach(false);
+
+    setMessage(
+      "Paiement confirmé. Votre séance coaching est activée."
+    );
+
+    toast.success("Paiement coach confirmé");
+  }, 900);
+};
 
   const handleVideoCall = () => {
     setMessage("Lancement de la session avec le coach...");
-    window.open("https://meet.google.com", "_blank");
+    window.open("https://meet.google.com/wvx-bnii-fta", "_blank");
   };
 
   return (
@@ -355,11 +363,11 @@ export default function Coach() {
 
             <div className="coach-price">
               <strong>
-                {coachData?.price || COACH_SESSION_AMOUNT} DH
+                {coachData?.price} DH
               </strong>
 
               <span>
-                abonnement coach {COACH_SUBSCRIPTION_DAYS} jours
+                séance coaching personnalisée
               </span>
             </div>
 
