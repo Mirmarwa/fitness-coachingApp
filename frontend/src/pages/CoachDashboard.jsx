@@ -407,7 +407,8 @@ export default function CoachDashboard() {
         ) : (
           <>
             <div className="coach-header">
-              <h1 className="coach-title">Coach Dashboard 🎯</h1>
+              <h1 className="coach-title">entraineur
+                🎯</h1>
               <p className="coach-subtitle">
                 Gérez vos clients, rendez-vous et programmes
               </p>
