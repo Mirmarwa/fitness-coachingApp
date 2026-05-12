@@ -83,6 +83,58 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path=r'conversation/(?P<user_id>[^/.]+)')
+    def conversation(self, request, user_id=None):
+        """GET /api/messages/conversation/<user_id>/ - Messages avec un utilisateur"""
+        if not user_id:
+            return Response({'error': 'user_id required'}, status=400)
+
+        messages = self.get_queryset().filter(
+            (models.Q(sender_id=user_id) & models.Q(receiver=request.user)) |
+            (models.Q(receiver_id=user_id) & models.Q(sender=request.user))
+        ).order_by('created_at')
+
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='send')
+    def send_message(self, request):
+        """POST /api/messages/send/ - Envoyer un message"""
+
+        receiver_id = request.data.get('receiver_id')
+        coach_id = request.data.get('coach_id')
+        content = request.data.get('content')
+
+        if not receiver_id or not content or not content.strip():
+            return Response(
+                {'error': 'receiver_id and content are required.'},
+                status=400
+            )
+
+        try:
+            receiver = User.objects.get(pk=receiver_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Receiver not found.'}, status=404)
+
+        coach = None
+
+        if coach_id:
+            try:
+                coach = User.objects.get(pk=coach_id, role='coach')
+            except User.DoesNotExist:
+                return Response({'error': 'Coach not found.'}, status=404)
+
+        message = Message.objects.create(
+            sender=request.user,
+            receiver=receiver,
+            coach=coach,
+            content=content.strip()
+        )
+
+        serializer = self.get_serializer(message)
+
+        return Response(serializer.data, status=201)
+
     @action(detail=False, methods=['get'], url_path='contacts')
     def contacts(self, request):
         """Contacts avec qui on a discuté"""
@@ -91,12 +143,18 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         for message in messages:
             partner = message.sender if message.sender != request.user else message.receiver
+            coach_user = message.coach
+            if not coach_user:
+                coach_user = message.sender if getattr(message.sender, 'role', None) == 'coach' else message.receiver if getattr(message.receiver, 'role', None) == 'coach' else None
+
             if partner.id not in contacts_map:
                 contacts_map[partner.id] = {
                     'id': partner.id,
+                    'name': partner.get_full_name().strip() or partner.username,
                     'username': partner.username,
                     'lastMessage': message.content,
                     'timestamp': message.created_at,
+                    'coach_id': coach_user.id if coach_user else None,
                 }
 
         contacts = sorted(contacts_map.values(), key=lambda x: x['timestamp'], reverse=True)

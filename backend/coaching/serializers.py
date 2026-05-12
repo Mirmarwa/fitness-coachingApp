@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Coach, Subscription, Message, Appointment
+
+User = get_user_model()
 
 
 class CoachSerializer(serializers.ModelSerializer):
@@ -50,6 +53,14 @@ class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.username', read_only=True)
     receiver_name = serializers.CharField(source='receiver.username', read_only=True)
     coach_name = serializers.CharField(source='coach.username', read_only=True, required=False)
+    receiver_id = serializers.PrimaryKeyRelatedField(source='receiver', queryset=User.objects.all(), write_only=True)
+    coach_id = serializers.PrimaryKeyRelatedField(
+        source='coach',
+        queryset=User.objects.filter(role='coach'),
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = Message
@@ -57,9 +68,11 @@ class MessageSerializer(serializers.ModelSerializer):
             'id',
             'sender',
             'receiver',
+            'receiver_id',
             'sender_name',
             'receiver_name',
             'coach',
+            'coach_id',
             'coach_name',
             'content',
             'created_at',
