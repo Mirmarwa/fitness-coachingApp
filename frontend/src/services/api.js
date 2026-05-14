@@ -57,6 +57,13 @@ export const subscribeToCoach = async (coachId, durationDays = 30) => {
   });
 };
 
+export const payCoach = async (coachId, amount, description = 'Séance coaching') => {
+  return authFetchJson(`${API_BASE_URL}/payments/create-coach-session/`, {
+    method: 'POST',
+    body: JSON.stringify({ coach_id: coachId, amount, description }),
+  });
+};
+
 export const getSubscriptionStatus = async () => {
   try {
     return await authFetchJson(`${API_BASE_URL}/subscriptions/status/`);

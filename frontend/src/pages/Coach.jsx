@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams}from "react-router-dom";
-import { API_BASE_URL } from "../services/api";
+import { API_BASE_URL, payCoach, authFetchJson, sendMessage } from "../services/api";
 import toast from "react-hot-toast";
 
 
@@ -27,9 +27,7 @@ export default function Coach() {
     text: "",
   });
 
-  const [coachPaid, setCoachPaid] = useState(
-  localStorage.getItem(`coach_paid_${id}`) === "true"
-);
+  const [coachPaid, setCoachPaid] = useState(false);
   const [payingCoach, setPayingCoach] = useState(false);
  
 
@@ -44,15 +42,31 @@ export default function Coach() {
         );
 
         setCoachData(selectedCoach);
+        return selectedCoach;
       } catch (error) {
         console.error("Erreur chargement coach", error);
+        return null;
       }
     };
 
-    loadCoach();
+    const checkPaymentStatus = async (loadedCoach) => {
+      if (!loadedCoach || !loadedCoach.user) return;
+      try {
+        const myCoaches = await authFetchJson(`${API_BASE_URL}/subscriptions/my-coaches/`);
+        const isPaid = myCoaches.some(sub => String(sub.coach) === String(loadedCoach.user));
+        setCoachPaid(isPaid);
+      } catch (error) {
+        console.error("Erreur verification statut paiement", error);
+        setCoachPaid(false);
+      }
+    };
+
+    loadCoach().then(loadedCoach => {
+      checkPaymentStatus(loadedCoach);
+    });
   }, [id]);
 
-  const handleContact = (event) => {
+  const handleContact = async (event) => {
     event.preventDefault();
 
     if (!contactForm.name.trim() || !contactForm.text.trim()) {
@@ -60,36 +74,43 @@ export default function Coach() {
       return;
     }
 
-    setMessage("Votre message a été envoyé au coach.");
+    if (!coachData || !coachData.user) {
+      toast.error("Données du coach non chargées");
+      return;
+    }
 
-    setContactForm({
-      name: "",
-      subject: "",
-      text: "",
-    });
-
-    toast.success("Message envoyé au coach");
+    try {
+      await sendMessage(coachData.user, coachData.user, contactForm.text);
+      setMessage("Votre message a été envoyé au coach.");
+      setContactForm({
+        name: "",
+        subject: "",
+        text: "",
+      });
+      toast.success("Message envoyé au coach");
+    } catch (error) {
+      toast.error(error.message || "Erreur lors de l'envoi du message");
+    }
   };
 
-  const handleCoachPayment = () => {
-  if (coachPaid || payingCoach) return;
+  const handleCoachPayment = async () => {
+    if (coachPaid || payingCoach) return;
 
-  setPayingCoach(true);
+    setPayingCoach(true);
 
-  window.setTimeout(() => {
-    setCoachPaid(true);
-
-    localStorage.setItem(`coach_paid_${id}`, "true");
-
-    setPayingCoach(false);
-
-    setMessage(
-      "Paiement confirmé. Votre séance coaching est activée."
-    );
-
-    toast.success("Paiement coach confirmé");
-  }, 900);
-};
+    try {
+      const amount = coachData?.price || 50;
+      await payCoach(id, amount);
+      
+      setCoachPaid(true);
+      setMessage("Paiement confirmé. Votre séance coaching est activée.");
+      toast.success("Paiement coach confirmé");
+    } catch (error) {
+      toast.error(error.message || "Erreur lors du paiement");
+    } finally {
+      setPayingCoach(false);
+    }
+  };
 
   const handleVideoCall = () => {
     setMessage("Lancement de la session avec le coach...");
@@ -373,7 +394,7 @@ export default function Coach() {
 
             {coachPaid ? (
               <div className="coach-message">
-                Paiement coach confirmé
+                Paiement confirmé
               </div>
             ) : (
               <button

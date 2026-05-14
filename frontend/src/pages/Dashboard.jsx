@@ -33,7 +33,7 @@ const getRoleFromToken = () => {
 
 function Dashboard() {
   const [payments, setPayments] = useState([]);
-  const [programs, setPrograms] = useState({});
+  const [purchasedPrograms, setPurchasedPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [progressData, setProgressData] = useState([]);
@@ -93,55 +93,34 @@ function Dashboard() {
 
         if (!isMounted) return;
 
-        if (!paymentsResponse.ok) {
-          if (paymentsResponse.status === 401) {
-            localStorage.removeItem("access");
-            window.location.href = "/login";
-            return;
+        if (paymentsResponse.ok) {
+          let paymentsData;
+          try {
+            paymentsData = await paymentsResponse.json();
+            setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+          } catch {
+            setPayments([]);
           }
-          throw new Error("Unable to load payments");
-        }
-
-        let paymentsData;
-        try {
-          paymentsData = await paymentsResponse.json();
-        } catch {
-          paymentsData = [];
         }
 
         if (!isMounted) return;
 
-        const safePayments = Array.isArray(paymentsData) ? paymentsData : [];
-        const programIds = safePayments
-          .map((payment) =>
-            typeof payment.program === "object"
-              ? payment.program?.id
-              : payment.program,
-          )
-          .filter(Boolean);
-
-        setPayments(safePayments);
-
-        const programEntries = await Promise.all(
-          programIds.map(async (programId) => {
-            try {
-              const programResponse = await fetchWithTimeout(
-                `${API_BASE_URL}/programs/${programId}/`,
-                { headers: { Authorization: `Bearer ${token}` } },
-                5000,
-              );
-              if (!programResponse.ok) return [programId, null];
-              const programData = await programResponse.json();
-              return [programId, programData];
-            } catch {
-              return [programId, null];
-            }
-          }),
+        const programsResponse = await fetchWithTimeout(
+          `${API_BASE_URL}/programs/unlocked/`,
+          { headers: { Authorization: `Bearer ${token}` } },
+          8000,
         );
 
-        if (isMounted) {
-          setPrograms(Object.fromEntries(programEntries));
+        if (programsResponse.ok) {
+          try {
+            const unlockedPrograms = await programsResponse.json();
+            setPurchasedPrograms(Array.isArray(unlockedPrograms) ? unlockedPrograms : []);
+          } catch {
+            setPurchasedPrograms([]);
+          }
         }
+
+        if (!isMounted) return;
 
         // Load progress data
         try {
@@ -183,24 +162,6 @@ function Dashboard() {
       clearTimeout(fallbackTimeout);
     };
   }, []);
-
-  const purchasedPrograms = useMemo(() => {
-    return payments.map((payment) => {
-      const programId =
-        typeof payment.program === "object"
-          ? payment.program?.id
-          : payment.program;
-
-      return {
-        payment,
-        programId,
-        program:
-          typeof payment.program === "object"
-            ? payment.program
-            : programs[programId],
-      };
-    });
-  }, [payments, programs]);
 
   const totalPaid = payments.reduce(
     (total, payment) => total + Number(payment.amount || 0),
@@ -666,17 +627,13 @@ function Dashboard() {
             </div>
           ) : (
             <div className="program-grid">
-              {purchasedPrograms.map(
-                ({ payment, program, programId }, index) => {
-                  const resolvedProgramId = program?.id || programId;
+              {purchasedPrograms.map((program, index) => {
+                  const resolvedProgramId = program?.id;
 
                   return (
                     <article
                       className="program-card"
-                      key={
-                        payment.id ||
-                        `${resolvedProgramId || "program"}-${index}`
-                      }
+                      key={resolvedProgramId || `program-${index}`}
                     >
                       <div className="program-image-box">
                         <img
@@ -687,7 +644,7 @@ function Dashboard() {
                             event.currentTarget.src = PLACEHOLDER_IMAGE;
                           }}
                         />
-                        <span className="paid-badge">✔️ Payé</span>
+                        <span className="paid-badge">✔️ Accessible</span>
                       </div>
 
                       <div className="program-content">
@@ -695,9 +652,6 @@ function Dashboard() {
                           <h3 className="program-title">
                             {program?.title || "Programme fitness"}
                           </h3>
-                          <span className="program-price">
-                            {formatPrice(payment.amount)}
-                          </span>
                         </div>
 
                         <p className="program-description">
@@ -715,7 +669,7 @@ function Dashboard() {
                       </div>
                     </article>
                   );
-                },
+                }
               )}
             </div>
           )}

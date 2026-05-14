@@ -134,6 +134,27 @@ class ProgramViewSet(viewsets.ModelViewSet):
         # Assure que le programme créé est assigné au coach connecté
         serializer.save(coach=self.request.user)
 
+    @action(detail=False, methods=['get'], url_path='unlocked')
+    def unlocked(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response([])
+            
+        if user.role == 'coach':
+            programs = Program.objects.filter(coach=user)
+        else:
+            from coaching.models import Subscription
+            from django.utils import timezone
+            active_coach_ids = Subscription.objects.filter(
+                user=user,
+                status='active',
+                end_date__gt=timezone.now()
+            ).values_list('coach_id', flat=True)
+            programs = Program.objects.filter(coach_id__in=active_coach_ids)
+            
+        serializer = self.get_serializer(programs, many=True)
+        return Response(serializer.data)
+
 
 class ProgressViewSet(viewsets.ModelViewSet):
     serializer_class = ProgressSerializer

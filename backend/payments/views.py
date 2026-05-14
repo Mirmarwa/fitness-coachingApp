@@ -44,8 +44,11 @@ def create_payment_for_coach(request):
             )
 
         # Récupérer le coach
-        coach_user = get_object_or_404(User, id=coach_id, role='coach')
-        coach = get_object_or_404(Coach, user=coach_user)
+        coach = get_object_or_404(Coach, id=coach_id)
+        coach_user = coach.user
+        
+        if not coach_user or getattr(coach_user, 'role', '') != 'coach':
+            return Response({'error': 'Profil coach invalide'}, status=400)
 
         # Valider montant
         try:
@@ -55,16 +58,17 @@ def create_payment_for_coach(request):
         except (TypeError, ValueError):
             return Response({'error': 'Montant invalide'}, status=400)
 
-        # ✅ VÉRIFIER: pas de paiement existant pour ce coach
-        existing_payment = Payment.objects.filter(
+        # ✅ VÉRIFIER: pas d'abonnement actif existant pour ce coach
+        active_subscription = Subscription.objects.filter(
             user=user,
             coach=coach_user,
-            status='completed'
+            status='active',
+            end_date__gt=timezone.now()
         ).first()
 
-        if existing_payment:
+        if active_subscription:
             return Response(
-                {'error': f'Vous avez déjà payé le coach {coach.name}'},
+                {'error': f'Vous avez déjà un abonnement actif avec le coach {coach.name}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -77,22 +81,21 @@ def create_payment_for_coach(request):
             description=description
         )
 
-        # ✅ AUTOMATIQUEMENT: Créer Subscription
-        end_date = timezone.now() + timedelta(days=90)  # 3 mois de coaching
-        subscription, created = Subscription.objects.get_or_create(
-            user=user,
-            coach=coach_user,
-            defaults={
-                'end_date': end_date,
-                'status': 'active'
-            }
-        )
-
-        # Si Subscription existait mais expiré, la réactiver
-        if not created and subscription.status == 'expired':
+        # ✅ AUTOMATIQUEMENT: Créer ou réactiver Subscription
+        end_date = timezone.now() + timedelta(days=30)  # 30 jours de coaching
+        
+        subscription = Subscription.objects.filter(user=user, coach=coach_user).first()
+        if subscription:
             subscription.status = 'active'
             subscription.end_date = end_date
             subscription.save()
+        else:
+            subscription = Subscription.objects.create(
+                user=user,
+                coach=coach_user,
+                end_date=end_date,
+                status='active'
+            )
 
         serializer = PaymentWithCoachSerializer(payment, context={'request': request})
         return Response(

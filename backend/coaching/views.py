@@ -102,7 +102,6 @@ class MessageViewSet(viewsets.ModelViewSet):
         """POST /api/messages/send/ - Envoyer un message"""
 
         receiver_id = request.data.get('receiver_id')
-        coach_id = request.data.get('coach_id')
         content = request.data.get('content')
 
         if not receiver_id or not content or not content.strip():
@@ -116,33 +115,47 @@ class MessageViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({'error': 'Receiver not found.'}, status=404)
 
+        user = request.user
+        has_sub = False
         coach = None
 
-        if coach_id:
-            try:
-                coach = User.objects.get(pk=coach_id, role='coach')
-            except User.DoesNotExist:
-                return Response({'error': 'Coach not found.'}, status=404)
+        if user.role == 'client' and getattr(receiver, 'role', '') == 'coach':
+            has_sub = Subscription.objects.filter(
+                user=user, coach=receiver, status='active', end_date__gt=timezone.now()
+            ).exists()
+            coach = receiver
+        elif user.role == 'coach' and getattr(receiver, 'role', '') == 'client':
+            has_sub = Subscription.objects.filter(
+                user=receiver, coach=user, status='active', end_date__gt=timezone.now()
+            ).exists()
+            coach = user
+
+        if not has_sub:
+            return Response(
+                {'error': 'Vous devez avoir un abonnement actif pour envoyer un message à cet utilisateur.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         message = Message.objects.create(
-            sender=request.user,
+            sender=user,
             receiver=receiver,
             coach=coach,
             content=content.strip()
         )
 
         serializer = self.get_serializer(message)
-
         return Response(serializer.data, status=201)
 
     @action(detail=False, methods=['get'], url_path='contacts')
     def contacts(self, request):
-        """Contacts avec qui on a discuté"""
+        """Contacts avec qui on a discuté ou avec qui on a un abonnement actif"""
+        user = request.user
         messages = self.get_queryset().order_by('-created_at')
         contacts_map = {}
 
+        # 1. Ajouter depuis les messages
         for message in messages:
-            partner = message.sender if message.sender != request.user else message.receiver
+            partner = message.sender if message.sender != user else message.receiver
             coach_user = message.coach
             if not coach_user:
                 coach_user = message.sender if getattr(message.sender, 'role', None) == 'coach' else message.receiver if getattr(message.receiver, 'role', None) == 'coach' else None
@@ -156,6 +169,34 @@ class MessageViewSet(viewsets.ModelViewSet):
                     'timestamp': message.created_at,
                     'coach_id': coach_user.id if coach_user else None,
                 }
+
+        # 2. Ajouter depuis les abonnements actifs
+        if user.role == 'client':
+            active_subs = Subscription.objects.filter(user=user, status='active', end_date__gt=timezone.now())
+            for sub in active_subs:
+                partner = sub.coach
+                if partner.id not in contacts_map:
+                    contacts_map[partner.id] = {
+                        'id': partner.id,
+                        'name': partner.get_full_name().strip() or partner.username,
+                        'username': partner.username,
+                        'lastMessage': 'Nouvel abonnement !',
+                        'timestamp': sub.start_date,
+                        'coach_id': partner.id,
+                    }
+        elif user.role == 'coach':
+            active_subs = Subscription.objects.filter(coach=user, status='active', end_date__gt=timezone.now())
+            for sub in active_subs:
+                partner = sub.user
+                if partner.id not in contacts_map:
+                    contacts_map[partner.id] = {
+                        'id': partner.id,
+                        'name': partner.get_full_name().strip() or partner.username,
+                        'username': partner.username,
+                        'lastMessage': 'Nouveau client !',
+                        'timestamp': sub.start_date,
+                        'coach_id': user.id,
+                    }
 
         contacts = sorted(contacts_map.values(), key=lambda x: x['timestamp'], reverse=True)
         return Response(contacts)
@@ -181,8 +222,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     def available_slots(self, request):
         coach_id = request.query_params.get('coach_id')
         queryset = Appointment.objects.filter(status='available')
+
+        if request.user.role == 'client':
+            subscribed_coach_ids = Subscription.objects.filter(
+                user=request.user,
+                status='active',
+                end_date__gt=timezone.now()
+            ).values_list('coach_id', flat=True)
+            queryset = queryset.filter(coach_id__in=subscribed_coach_ids)
+
         if coach_id:
             queryset = queryset.filter(coach_id=coach_id)
+            
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -209,15 +260,28 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(appointment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], url_path='book')
+    @action(detail=True, methods=['post'], url_path='book', permission_classes=[IsAuthenticated])
     def book_slot(self, request, pk=None):
-        appointment = self.get_object()
+        try:
+            appointment = Appointment.objects.get(pk=pk)
+        except Appointment.DoesNotExist:
+            return Response({'error': 'Créneau introuvable.'}, status=status.HTTP_404_NOT_FOUND)
 
         if request.user.role != 'client':
             return Response({'error': 'Seul un client peut réserver un créneau.'}, status=status.HTTP_403_FORBIDDEN)
 
         if appointment.status != 'available':
             return Response({'error': 'Ce créneau n’est pas disponible.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        has_active_subscription = Subscription.objects.filter(
+            user=request.user,
+            coach=appointment.coach,
+            status='active',
+            end_date__gt=timezone.now()
+        ).exists()
+
+        if not has_active_subscription:
+            return Response({'error': 'Vous devez avoir un abonnement actif avec ce coach pour réserver.'}, status=status.HTTP_403_FORBIDDEN)
 
         appointment.client = request.user
         appointment.status = 'booked'
