@@ -1,5 +1,6 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
@@ -8,18 +9,41 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from .models import Coach, Subscription, Message, Appointment
-from .serializers import CoachSerializer, SubscriptionSerializer, MessageSerializer, AppointmentSerializer
-from custom_permissions import IsAppointmentOwnerOrParticipant, IsMessageParticipant
+from .serializers import (
+    CoachSerializer,
+    SubscriptionSerializer,
+    MessageSerializer,
+    MessagePartialUpdateSerializer,
+    AppointmentSerializer,
+)
+from custom_permissions import (
+    IsAppointmentOwnerOrParticipant,
+    IsMessageParticipant,
+    IsCoachProfileOwnerOrReadOnly,
+)
 
 User = get_user_model()
 
 
-class CoachViewSet(viewsets.ModelViewSet):
+class CoachViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
-    Retourne tous les coachs avec image et availability
+    Liste / détail lisibles sans compte pour le catalogue.
+    Création de fiches coach = inscription (Register) uniquement ;
+    PATCH réservée au utilisateur dont le profil Coach est relié (coach.user).
     """
     queryset = Coach.objects.filter(user__isnull=False)
     serializer_class = CoachSerializer
+    permission_classes = [IsCoachProfileOwnerOrReadOnly]
+    http_method_names = ['get', 'patch', 'put', 'head', 'options']
+
+    def update(self, request, *args, **kwargs):
+        """PUT désactivé : PATCH partiel utilisé depuis le front (profil coach)."""
+        return Response({'detail': 'La méthode PUT n’est pas supportée pour ce profil.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
@@ -57,18 +81,40 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class MessageViewSet(viewsets.ModelViewSet):
+class MessageViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Création de messages uniquement via POST /messages/send/ (contrôle abonnement).
+    Plus de POST sur la collection (/messages/), qui contourne les gardes précédentes.
+    PATCH réservée au destinataire pour « is_read » uniquement (sérialiseur dédié).
+    """
+
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsMessageParticipant]
+    http_method_names = ['get', 'patch', 'head', 'options', 'post']
 
     def get_queryset(self):
         return Message.objects.filter(
             models.Q(sender=self.request.user) | models.Q(receiver=self.request.user)
         ).order_by('-created_at')
 
-    def perform_create(self, serializer):
-        """Ajouter sender automatiquement"""
-        serializer.save(sender=self.request.user)
+    def get_serializer_class(self):
+        if self.action in ('update', 'partial_update'):
+            return MessagePartialUpdateSerializer
+        return MessageSerializer
+
+    def update(self, request, *args, **kwargs):
+        return Response({'detail': 'La méthode PUT n’est pas supportée.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if instance.receiver_id != self.request.user.id:
+            raise PermissionDenied('Seul le destinataire peut mettre ce message à jour.')
+        serializer.save()
 
     @action(detail=False, methods=['get'], url_path='with-coach')
     def with_coach(self, request):

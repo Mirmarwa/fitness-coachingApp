@@ -29,6 +29,7 @@ class CoachSerializer(serializers.ModelSerializer):
             'availability',
             'video_link'
         ]
+        read_only_fields = ['user']
 
     def get_image_url(self, obj):
         """Retourner URL absolute de l'image"""
@@ -79,6 +80,14 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_read'
         ]
         read_only_fields = ['sender', 'created_at']
+
+
+class MessagePartialUpdateSerializer(serializers.ModelSerializer):
+    """PATCH autorisé pour marquer un message comme lu uniquement."""
+
+    class Meta:
+        model = Message
+        fields = ['is_read']
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

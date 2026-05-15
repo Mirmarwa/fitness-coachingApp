@@ -1,11 +1,28 @@
 from rest_framework import serializers
 from .models import CustomUser
 
+# Sérialiseur utilisateur « lecture » : jamais de mot de passe, permissions ou autre donnée Django sensible.
+_SAFE_USER_FIELDS = [
+    'id',
+    'username',
+    'email',
+    'first_name',
+    'last_name',
+    'phone',
+    'weight',
+    'height',
+    'goal',
+    'role',
+]
+
 
 class UserSerializer(serializers.ModelSerializer):
+    """Exposition minimale pour les réponses GET (profil Navbar, etc.). Toujours en lecture seule."""
+
     class Meta:
         model = CustomUser
-        fields = '__all__'
+        fields = _SAFE_USER_FIELDS
+        read_only_fields = _SAFE_USER_FIELDS
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

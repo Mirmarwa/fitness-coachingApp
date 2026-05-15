@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -9,9 +9,25 @@ from .models import CustomUser
 from .serializers import UserSerializer, UserProfileSerializer, RegisterSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    Plus de création/suppression/mise à jour globale sur tous les utilisateurs :
+    inscription = POST /api/register/, profil = /api/users/profile/.
+    Liste réservée au staff ; un utilisateur authentifié ne peut charger que lui-même (hors admin).
+    """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if self.action == 'list':
+            if user.is_staff:
+                return CustomUser.objects.all().order_by('id')
+            return CustomUser.objects.none()
+        if user.is_staff:
+            return CustomUser.objects.all()
+        return CustomUser.objects.filter(pk=user.pk)
 
     @action(detail=False, methods=['get', 'patch'], url_path='profile', permission_classes=[IsAuthenticated])
     def profile(self, request):

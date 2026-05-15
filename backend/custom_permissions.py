@@ -36,3 +36,21 @@ class IsMessageParticipant(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.sender == request.user or obj.receiver == request.user
+
+
+class IsCoachProfileOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Catalogue coach : lectures (liste, détail) ouvertes.
+    Modifications réservées au compte Django lié à ce Coach (coach.user).
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        linked_user = getattr(obj, 'user', None)
+        return linked_user is not None and linked_user.pk == request.user.pk
