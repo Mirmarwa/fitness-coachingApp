@@ -23,12 +23,13 @@ const getUserIdFromToken = () => {
 
 const getStatusColor = (status) => {
   switch (status) {
+    case "available":
+      return "#0ea5e9";
     case "pending":
+    case "booked":
       return "#f59e0b";
     case "confirmed":
       return "#10b981";
-    case "booked":
-      return "#3b82f6";
     case "completed":
       return "#6b7280";
     case "cancelled":
@@ -40,12 +41,13 @@ const getStatusColor = (status) => {
 
 const getStatusText = (status) => {
   switch (status) {
+    case "available":
+      return "Disponible";
     case "pending":
-      return "En attente";
+    case "booked":
+      return "En attente de confirmation";
     case "confirmed":
       return "Confirmé";
-    case "booked":
-      return "Réservé";
     case "completed":
       return "Terminé";
     case "cancelled":
@@ -54,6 +56,10 @@ const getStatusText = (status) => {
       return status || "Non disponible";
   }
 };
+
+/** RDV réservé côté client : en attente du coach (nouveau flux « pending », ancien « booked »). */
+const isAwaitingCoachConfirmation = (status) =>
+  status === "pending" || status === "booked";
 
 const formatDate = (value) => {
   if (!value) return "Non disponible";
@@ -703,7 +709,7 @@ export default function Appointments() {
                   {appointment.notes && <p className="appointment-notes">"{appointment.notes}"</p>}
 
                   <div className="appointment-actions">
-                    {userRole === "coach" && appointment.status === "pending" && (
+                    {userRole === "coach" && isAwaitingCoachConfirmation(appointment.status) && (
                       <button className="action-button confirm-button" onClick={() => handleConfirmAppointment(appointment.id)}>
                         Confirmer
                       </button>

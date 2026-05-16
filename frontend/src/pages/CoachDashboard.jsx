@@ -11,6 +11,31 @@ const getUserIdFromToken = (token) => {
   }
 };
 
+const RESERVED_APPOINTMENT_STATUSES = new Set([
+  "pending",
+  "booked",
+  "confirmed",
+  "completed",
+]);
+
+const coachAppointmentBadgeClass = (status) => {
+  if (status === "available") return "available";
+  if (status === "pending" || status === "booked") return "booked";
+  if (status === "confirmed") return "confirmed";
+  if (status === "completed") return "completed";
+  if (status === "cancelled") return "cancelled";
+  return "available";
+};
+
+const coachAppointmentStatusLabel = (status) => {
+  if (status === "available") return "Disponible";
+  if (status === "pending" || status === "booked") return "En attente";
+  if (status === "confirmed") return "Confirmé";
+  if (status === "completed") return "Terminé";
+  if (status === "cancelled") return "Annulé";
+  return status || "—";
+};
+
 export default function CoachDashboard() {
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -113,7 +138,9 @@ export default function CoachDashboard() {
 
   const stats = {
     clients: clients.length,
-    appointments: appointments.filter((a) => a.status === "booked").length,
+    appointments: appointments.filter((a) =>
+      RESERVED_APPOINTMENT_STATUSES.has(a.status),
+    ).length,
     programs: programs.length,
     revenue: "Non disponible",
   };
@@ -261,6 +288,21 @@ export default function CoachDashboard() {
           .card-badge.available {
             background: #dbeafe;
             color: #1e40af;
+          }
+
+          .card-badge.confirmed {
+            background: #d1fae5;
+            color: #065f46;
+          }
+
+          .card-badge.completed {
+            background: #e5e7eb;
+            color: #374151;
+          }
+
+          .card-badge.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
           }
 
           .card-content {
@@ -574,9 +616,9 @@ export default function CoachDashboard() {
                           {formatDate(apt.date)} à {apt.time || "Non disponible"}
                         </h3>
                         <span
-                          className={`card-badge ${apt.status === "booked" ? "booked" : "available"}`}
+                          className={`card-badge ${coachAppointmentBadgeClass(apt.status)}`}
                         >
-                          {apt.status === "booked" ? "Réservé" : "Disponible"}
+                          {coachAppointmentStatusLabel(apt.status)}
                         </span>
                       </div>
                       <p className="card-content">

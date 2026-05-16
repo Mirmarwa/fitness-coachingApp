@@ -329,8 +329,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         if not has_active_subscription:
             return Response({'error': 'Vous devez avoir un abonnement actif avec ce coach pour réserver.'}, status=status.HTTP_403_FORBIDDEN)
 
+        # « pending » : RDV réservé par le client, en attente d’acceptation coach (cohérent avec l’UI)
         appointment.client = request.user
-        appointment.status = 'booked'
+        appointment.status = 'pending'
         appointment.save()
 
         serializer = self.get_serializer(appointment)
@@ -342,6 +343,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         if request.user != appointment.coach:
             return Response({'error': 'Seul le coach peut confirmer ce rendez-vous.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if appointment.status not in ('pending', 'booked'):
+            return Response(
+                {
+                    'error': (
+                        'Seuls les rendez-vous en attente de confirmation du coach peuvent être confirmés '
+                        '(statuts « pending » ou « booked » pour les anciennes données).'
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         appointment.status = 'confirmed'
         appointment.save()
