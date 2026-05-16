@@ -34,14 +34,8 @@ class Payment(models.Model):
     description = models.CharField(max_length=255, blank=True, default="Séance coaching")
 
     class Meta:
-        # Éviter repeating payment pour même coach
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'coach'],
-                condition=models.Q(status='completed'),
-                name='unique_user_coach_payment'
-            )
-        ]
+        # Historique complet des paiements : pas de contrainte unique user+coach.
+        # Les doublons d'abonnement actif sont gérés sur Subscription.
         ordering = ['-date']
 
     def __str__(self):

@@ -4,14 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
-from django.utils import timezone
-from datetime import timedelta
 from django.contrib.auth import get_user_model
 
 from .models import Payment
 from .serializers import PaymentSerializer, PaymentWithCoachSerializer
+from .services import ActiveSubscriptionError, process_coaching_payment
 from programs.models import Program
-from coaching.models import Coach, Subscription
+from coaching.models import Coach
 
 User = get_user_model()
 
@@ -37,20 +36,14 @@ def create_payment_for_coach(request):
         amount = request.data.get('amount')
         description = request.data.get('description', 'Séance coaching')
 
-        if not coach_id or not amount:
+        if not coach_id or amount in [None, '']:
             return Response(
                 {'error': 'coach_id et amount requis'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Récupérer le coach
         coach = get_object_or_404(Coach, id=coach_id)
-        coach_user = coach.user
-        
-        if not coach_user or getattr(coach_user, 'role', '') != 'coach':
-            return Response({'error': 'Profil coach invalide'}, status=400)
 
-        # Valider montant
         try:
             amount = float(amount)
             if amount <= 0:
@@ -58,59 +51,31 @@ def create_payment_for_coach(request):
         except (TypeError, ValueError):
             return Response({'error': 'Montant invalide'}, status=400)
 
-        # ✅ VÉRIFIER: pas d'abonnement actif existant pour ce coach
-        active_subscription = Subscription.objects.filter(
-            user=user,
-            coach=coach_user,
-            status='active',
-            end_date__gt=timezone.now()
-        ).first()
-
-        if active_subscription:
-            return Response(
-                {'error': f'Vous avez déjà un abonnement actif avec le coach {coach.name}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # ✅ Créer le paiement
-        payment = Payment.objects.create(
-            user=user,
-            coach=coach_user,
-            amount=amount,
-            status='completed',
-            description=description
+        payment, subscription = process_coaching_payment(
+            user,
+            coach,
+            amount,
+            description=description,
         )
-
-        # ✅ AUTOMATIQUEMENT: Créer ou réactiver Subscription
-        end_date = timezone.now() + timedelta(days=30)  # 30 jours de coaching
-        
-        subscription = Subscription.objects.filter(user=user, coach=coach_user).first()
-        if subscription:
-            subscription.status = 'active'
-            subscription.end_date = end_date
-            subscription.save()
-        else:
-            subscription = Subscription.objects.create(
-                user=user,
-                coach=coach_user,
-                end_date=end_date,
-                status='active'
-            )
 
         serializer = PaymentWithCoachSerializer(payment, context={'request': request})
         return Response(
             {
                 'message': f'Paiement complété! Coaching avec {coach.name} activé',
                 'payment': serializer.data,
-                'subscription_active': subscription.is_active()
+                'subscription_active': subscription.is_active(),
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
-    except IntegrityError as e:
+    except ActiveSubscriptionError as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    except ValueError as exc:
+        return Response({'error': str(exc)}, status=400)
+    except IntegrityError:
         return Response(
-            {'error': f'Vous avez déjà payé ce coach'},
-            status=status.HTTP_400_BAD_REQUEST
+            {'error': 'Un abonnement actif existe déjà pour ce coach.'},
+            status=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
         return Response({'error': str(e)}, status=500)
@@ -128,8 +93,8 @@ def get_my_coaches(request):
     payments = Payment.objects.filter(
         user=request.user,
         coach__isnull=False,
-        status='completed'
-    ).select_related('coach__user', 'coach__coach_profile')
+        status='completed',
+    ).select_related('coach', 'coach__coach_profile').order_by('-date')
 
     serializer = PaymentWithCoachSerializer(payments, many=True, context={'request': request})
     return Response(serializer.data)

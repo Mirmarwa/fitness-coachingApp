@@ -214,7 +214,7 @@ export default function Navbar() {
         <NavLink to="/" className="app-nav-link">
           Accueil
         </NavLink>
-        <NavLink to="/programmes" className="app-nav-link">
+        <NavLink to="/ar" className="app-nav-link">
           Programmes
         </NavLink>
         <NavLink to="/coaches" className="app-nav-link">

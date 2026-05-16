@@ -65,7 +65,8 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         """GET /api/subscriptions/my-coaches/ - Mes coachs actifs (client)"""
         subscriptions = Subscription.objects.filter(
             user=request.user,
-            status='active'
+            status='active',
+            end_date__gt=timezone.now(),
         )
         serializer = self.get_serializer(subscriptions, many=True)
         return Response(serializer.data)
@@ -75,7 +76,8 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         """GET /api/subscriptions/my-clients/ - Mes clients actifs (coach)"""
         subscriptions = Subscription.objects.filter(
             coach=request.user,
-            status='active'
+            status='active',
+            end_date__gt=timezone.now(),
         )
         serializer = self.get_serializer(subscriptions, many=True)
         return Response(serializer.data)
