@@ -1,3 +1,5 @@
+import { clearAuthStorage } from "../utils/authSession";
+
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 const BACKEND_BASE_URL = API_BASE_URL.replace(/\/api$/, "");
 
@@ -20,8 +22,7 @@ export const authFetch = async (url, options = {}) => {
   });
 
   if (response.status === 401) {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    clearAuthStorage();
     window.location.href = "/login";
   }
 
@@ -30,6 +31,16 @@ export const authFetch = async (url, options = {}) => {
 
 export const authFetchJson = async (url, options = {}) => {
   const response = await authFetch(url, options);
+
+  if (response.status === 204) {
+    if (!response.ok) {
+      const err = new Error(response.statusText || "Erreur réseau");
+      err.status = response.status;
+      throw err;
+    }
+    return null;
+  }
+
   let json;
 
   try {
@@ -175,4 +186,54 @@ export const updateProfile = async (data) => {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+};
+
+// Admin APIs (is_staff requis)
+export const getAdminOverview = async () => {
+  return authFetchJson(`${API_BASE_URL}/admin/overview/`);
+};
+
+export const getAdminUsers = async (role = "") => {
+  const query = role ? `?role=${encodeURIComponent(role)}` : "";
+  return authFetchJson(`${API_BASE_URL}/admin/users/${query}`);
+};
+
+export const updateAdminUser = async (userId, data) => {
+  return authFetchJson(`${API_BASE_URL}/admin/users/${userId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminUser = async (userId) => {
+  return authFetchJson(`${API_BASE_URL}/admin/users/${userId}/`, {
+    method: "DELETE",
+  });
+};
+
+export const getAdminCoaches = async () => {
+  return authFetchJson(`${API_BASE_URL}/admin/coaches/`);
+};
+
+export const updateAdminCoach = async (coachId, data) => {
+  return authFetchJson(`${API_BASE_URL}/admin/coaches/${coachId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminCoach = async (coachId) => {
+  return authFetchJson(`${API_BASE_URL}/admin/coaches/${coachId}/`, {
+    method: "DELETE",
+  });
+};
+
+export const getAdminPayments = async (status = "") => {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  return authFetchJson(`${API_BASE_URL}/admin/payments/${query}`);
+};
+
+export const getAdminSubscriptions = async (status = "") => {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  return authFetchJson(`${API_BASE_URL}/admin/subscriptions/${query}`);
 };

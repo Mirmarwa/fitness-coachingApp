@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BACKEND_BASE_URL } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { applyUserSession, getPostLoginPath } from "../utils/authSession";
 
 const getFieldError = (data) => {
   if (!data) return "Erreur lors de l'inscription.";
@@ -22,6 +24,7 @@ const getFieldError = (data) => {
 
 export default function Register() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,13 +76,10 @@ export default function Register() {
         if (data?.access && data?.refresh && data?.user) {
           localStorage.setItem("access", data.access);
           localStorage.setItem("refresh", data.refresh);
-          localStorage.setItem("username", data.user.username || username);
-          localStorage.setItem("user_role", data.user.role || role);
+          applyUserSession(data.user);
+          setUser(data.user);
           setSuccess("Inscription réussie ! Vous êtes maintenant connecté.");
-          setTimeout(
-            () => navigate(data.user.role === "coach" ? "/coach-dashboard" : "/dashboard"),
-            800
-          );
+          setTimeout(() => navigate(getPostLoginPath(data.user)), 800);
           return;
         }
 

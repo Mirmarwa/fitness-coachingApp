@@ -19,13 +19,13 @@ import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 import CoachRoute from "./components/CoachRoute";
-
-
-
-
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
+    <AuthProvider>
     <BrowserRouter>
       <Navbar />
 
@@ -42,6 +42,7 @@ function App() {
           <Route path="/program/:id" element={<ProgramDetail />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/coach-dashboard" element={<CoachRoute><CoachDashboard /></CoachRoute>} />
+          <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><Progress /></PrivateRoute>} />
           <Route path="/coach/:id" element={<Coach />} />
@@ -54,6 +55,7 @@ function App() {
 
       <Footer />
     </BrowserRouter>
+    </AuthProvider>
   );
 }
 

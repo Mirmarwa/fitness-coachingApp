@@ -1,21 +1,24 @@
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function PrivateRoute({ children }) {
+  const { user, loading } = useAuth();
   const token = localStorage.getItem("access");
 
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (!payload || !payload.user_id) {
-      throw new Error("Invalid token");
-    }
-  } catch {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    return <Navigate to="/login" />;
+  if (loading) {
+    return (
+      <main style={{ padding: "48px 24px", textAlign: "center", color: "#64748b" }}>
+        Chargement...
+      </main>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return children;

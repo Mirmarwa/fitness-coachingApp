@@ -4,32 +4,19 @@ import toast from "react-hot-toast";
 import {
   API_BASE_URL,
   BACKEND_BASE_URL,
-  getProfile,
   getMyProgress,
 } from "../services/api";
 import ProgramCard from "../components/ProgramCard";
 import ProgressStats from "../components/ProgressStats";
 import ProgressCharts from "../components/ProgressCharts";
 import BadgeSystem from "../components/BadgeSystem";
+import { useAuth } from "../context/AuthContext";
+import { getPostLoginPath } from "../utils/authSession";
 
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
 const COACH_SESSION_AMOUNT = 250;
-
-const getRoleFromToken = () => {
-  const token = localStorage.getItem("access");
-  if (!token) return null;
-
-  try {
-    return (
-      JSON.parse(atob(token.split(".")[1])).role ||
-      localStorage.getItem("user_role")
-    );
-  } catch {
-    return null;
-  }
-};
 
 function Dashboard() {
   const [payments, setPayments] = useState([]);
@@ -38,12 +25,19 @@ function Dashboard() {
   const [error, setError] = useState(null);
   const [progressData, setProgressData] = useState([]);
   const navigate = useNavigate();
+  const { user, loading: authLoading, isCoach, isStaff } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
 
-    if (getRoleFromToken() === "coach") {
-      navigate("/coach-dashboard", { replace: true });
+    if (authLoading) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    if (user && (isCoach || isStaff)) {
+      navigate(getPostLoginPath(user), { replace: true });
       return () => {
         isMounted = false;
       };
@@ -70,20 +64,6 @@ function Dashboard() {
     const loadDashboard = async () => {
       try {
         const token = localStorage.getItem("access");
-
-        let resolvedRole = getRoleFromToken();
-        if (!resolvedRole) {
-          const profile = await getProfile();
-          resolvedRole = profile?.role || null;
-          if (resolvedRole) {
-            localStorage.setItem("user_role", resolvedRole);
-          }
-        }
-
-        if (resolvedRole === "coach") {
-          navigate("/coach-dashboard", { replace: true });
-          return;
-        }
 
         const paymentsResponse = await fetchWithTimeout(
           `${API_BASE_URL}/payments/my/`,
@@ -161,7 +141,7 @@ function Dashboard() {
       isMounted = false;
       clearTimeout(fallbackTimeout);
     };
-  }, []);
+  }, [authLoading, user, isCoach, isStaff, navigate]);
 
   const totalPaid = payments.reduce(
     (total, payment) => total + Number(payment.amount || 0),

@@ -8,7 +8,8 @@ from programs.views import ProgramViewSet, ProgressViewSet
 from users.views import UserViewSet
 from coaching.views import CoachViewSet, SubscriptionViewSet, MessageViewSet, AppointmentViewSet
 
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+from users.tokens import CustomTokenObtainPairView
 
 # Import pour Swagger
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -35,7 +36,7 @@ urlpatterns = [
     path('api/payments/', include('payments.urls')),
 
     # JWT auth
-    path('api/token/', TokenObtainPairView.as_view()),
+    path('api/token/', CustomTokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
 
     # Swagger/OpenAPI documentation

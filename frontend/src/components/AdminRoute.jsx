@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function CoachRoute({ children }) {
-  const { user, loading, isCoach, isStaff } = useAuth();
+function AdminRoute({ children }) {
+  const { user, loading, isStaff } = useAuth();
   const token = localStorage.getItem("access");
 
   if (!token) {
@@ -17,19 +17,11 @@ function CoachRoute({ children }) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (isStaff) {
-    return <Navigate to="/admin-dashboard" replace />;
-  }
-
-  if (!isCoach) {
+  if (!user || !isStaff) {
     return <Navigate to="/" replace />;
   }
 
   return children;
 }
 
-export default CoachRoute;
+export default AdminRoute;

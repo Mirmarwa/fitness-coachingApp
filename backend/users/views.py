@@ -3,10 +3,9 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-
 from .models import CustomUser
 from .serializers import UserSerializer, UserProfileSerializer, RegisterSerializer
+from .tokens import CustomTokenObtainPairSerializer
 
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -87,18 +86,19 @@ def register(request):
     if serializer.is_valid():
         user = serializer.save()
         
-        # Générer les tokens JWT
-        refresh = RefreshToken.for_user(user)
-        
+        refresh = CustomTokenObtainPairSerializer.get_token(user)
+
         return Response({
             "user": {
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "role": user.role
+                "role": user.role,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
             },
             "access": str(refresh.access_token),
-            "refresh": str(refresh)
+            "refresh": str(refresh),
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

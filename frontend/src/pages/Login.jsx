@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { API_BASE_URL, BACKEND_BASE_URL } from "../services/api";
-
-const getRoleFromToken = (token) => {
-  try {
-    return JSON.parse(atob(token.split(".")[1])).role || null;
-  } catch {
-    return null;
-  }
-};
+import { API_BASE_URL, BACKEND_BASE_URL, getProfile } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import {
+  applyUserSession,
+  getPostLoginPath,
+  parseTokenPayload,
+  userFromTokenPayload,
+} from "../utils/authSession";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,27 +46,20 @@ export default function Login() {
         localStorage.setItem("refresh", data.refresh);
       }
 
-      let role = getRoleFromToken(data.access);
-
-      if (!role) {
-        const profileResponse = await fetch(`${API_BASE_URL}/users/profile/`, {
-          headers: {
-            Authorization: `Bearer ${data.access}`,
-          },
-        });
-
-        if (profileResponse.ok) {
-          const profile = await profileResponse.json();
-          role = profile?.role || null;
-        }
+      let profile = null;
+      try {
+        profile = await getProfile();
+      } catch {
+        profile = userFromTokenPayload(parseTokenPayload(data.access));
       }
 
-      if (role) {
-        localStorage.setItem("user_role", role);
+      if (profile) {
+        applyUserSession(profile);
+        setUser(profile);
       }
 
       toast.success("Connexion réussie");
-      navigate(role === "coach" ? "/coach-dashboard" : "/dashboard");
+      navigate(getPostLoginPath(profile));
     } catch {
       toast.error("Nom d'utilisateur ou mot de passe incorrect");
     } finally {

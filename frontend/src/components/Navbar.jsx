@@ -1,94 +1,19 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { authFetch, API_BASE_URL } from "../services/api";
-
-const getDisplayName = (user) => {
-  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
-  return fullName || user.username || user.email || "";
-};
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isLoggedIn = Boolean(localStorage.getItem("access"));
-  const [displayName, setDisplayName] = useState(
-    localStorage.getItem("user_display_name") || ""
-  );
-  const [userRole, setUserRole] = useState(localStorage.getItem("user_role"));
+  const { user, loading, isStaff, isCoach, logout } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-    if (!token) {
-      setUserRole(null);
-      setDisplayName(localStorage.getItem("username") || "");
-      return;
-    }
-
-    let payload;
-    try {
-      payload = JSON.parse(atob(token.split(".")[1]));
-    } catch {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      setUserRole(null);
-      setDisplayName(localStorage.getItem("username") || "");
-      return;
-    }
-
-    const userId = payload.user_id;
-    const role = payload.role || localStorage.getItem("user_role");
-
-    setUserRole(role);
-    if (role) {
-      localStorage.setItem("user_role", role);
-    }
-
-    if (!token || !userId) {
-      setDisplayName("");
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadCurrentUser = async () => {
-      try {
-        const response = await authFetch(`${API_BASE_URL}/users/${userId}/`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error("Unable to load user");
-        }
-
-        const name = getDisplayName(data);
-
-        if (isMounted) {
-          setDisplayName(name);
-          localStorage.setItem("user_display_name", name);
-          if (data.role) {
-            setUserRole(data.role);
-            localStorage.setItem("user_role", data.role);
-          }
-        }
-      } catch {
-        if (isMounted) {
-          setDisplayName(localStorage.getItem("username") || "");
-        }
-      }
-    };
-
-    loadCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [location.pathname]);
+  const isLoggedIn = Boolean(localStorage.getItem("access") && user);
+  const displayName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
+    user?.username ||
+    localStorage.getItem("user_display_name") ||
+    "";
 
   const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("username");
-    localStorage.removeItem("user_display_name");
-    localStorage.removeItem("user_role");
+    logout();
     navigate("/login");
   };
 
@@ -214,18 +139,23 @@ export default function Navbar() {
         <NavLink to="/" className="app-nav-link">
           Accueil
         </NavLink>
-        <NavLink to="/ar" className="app-nav-link">
+        <NavLink to="/programmes" className="app-nav-link">
           Programmes
         </NavLink>
         <NavLink to="/coaches" className="app-nav-link">
           Coachs
         </NavLink>
-        {isLoggedIn && userRole !== "coach" && (
+        {isLoggedIn && isStaff && (
+          <NavLink to="/admin-dashboard" className="app-nav-link">
+            Admin
+          </NavLink>
+        )}
+        {isLoggedIn && !isStaff && !isCoach && (
           <NavLink to="/dashboard" className="app-nav-link">
             Dashboard
           </NavLink>
         )}
-        {isLoggedIn && userRole === "coach" && (
+        {isLoggedIn && isCoach && !isStaff && (
           <NavLink to="/coach-dashboard" className="app-nav-link">
             Coach Dashboard
           </NavLink>
@@ -248,7 +178,7 @@ export default function Navbar() {
             Rendez-vous
           </NavLink>
         )}
-        {isLoggedIn && userRole !== "coach" && (
+        {isLoggedIn && !isCoach && !isStaff && (
           <NavLink to="/progress" className="app-nav-link">
             Progression
           </NavLink>
@@ -256,7 +186,7 @@ export default function Navbar() {
 
         {isLoggedIn ? (
           <>
-            {displayName && (
+            {!loading && displayName && (
               <span className="user-greeting">Bonjour {displayName}</span>
             )}
             <button type="button" className="logout-button" onClick={handleLogout}>
