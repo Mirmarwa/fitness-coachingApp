@@ -48,7 +48,11 @@ export default function CoachDashboard() {
     description: "",
     duration: "30",
     price: "",
+    video_url: "",
   });
+  const [editingProgram, setEditingProgram] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
 
   useEffect(() => {
     loadCoachData();
@@ -95,7 +99,30 @@ export default function CoachDashboard() {
     }
   };
 
-  const handleCreateProgram = async () => {
+  const handleEditProgram = (program) => {
+    setEditingProgram(program);
+    setNewProgram({
+      title: program.title || "",
+      description: program.description || "",
+      duration: String(program.duration || "30"),
+      price: String(program.price || ""),
+      video_url: program.video_url || "",
+    });
+    setImageFile(null);
+    setVideoFile(null);
+    setShowCreateProgram(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProgram(null);
+    setShowCreateProgram(false);
+    setNewProgram({ title: "", description: "", duration: "30", price: "", video_url: "" });
+    setImageFile(null);
+    setVideoFile(null);
+  };
+
+  const handleSaveProgram = async (e) => {
+    if (e) e.preventDefault();
     if (!newProgram.title.trim() || !newProgram.description.trim()) {
       toast.error("Titre et description requis");
       return;
@@ -115,24 +142,74 @@ export default function CoachDashboard() {
     }
 
     try {
-      const response = await authFetchJson(`${API_BASE_URL}/programs/`, {
-        method: "POST",
-        body: JSON.stringify({
-          title: newProgram.title.trim(),
-          description: newProgram.description.trim(),
-          duration,
-          price,
-        }),
+      const formData = new FormData();
+      formData.append("title", newProgram.title.trim());
+      formData.append("description", newProgram.description.trim());
+      formData.append("duration", String(duration));
+      formData.append("price", String(price));
+      formData.append("video_url", newProgram.video_url || "");
+      
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+      if (videoFile) {
+        formData.append("video_file", videoFile);
+      }
+
+      const token = localStorage.getItem("access");
+      const headers = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const url = editingProgram
+        ? `${API_BASE_URL}/programs/${editingProgram.id}/`
+        : `${API_BASE_URL}/programs/`;
+      const method = editingProgram ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: formData,
       });
 
-      setPrograms([...programs, response]);
-      setNewProgram({ title: "", description: "", duration: "30", price: "" });
-      setShowCreateProgram(false);
-      toast.success("Programme créé !");
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.detail || errJson.error || "Erreur lors de l'enregistrement");
+      }
+
+      toast.success(editingProgram ? "Programme modifié !" : "Programme créé !");
+      handleCancelEdit();
       await loadCoachData();
     } catch (error) {
-      toast.error("Erreur lors de la création du programme");
+      toast.error(error.message || "Erreur lors de l'enregistrement");
       console.error(error);
+    }
+  };
+
+  const handleDeleteProgram = async (program) => {
+    if (!window.confirm(`Supprimer le programme « ${program.title} » ?`)) return;
+    try {
+      const token = localStorage.getItem("access");
+      const headers = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/programs/${program.id}/`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.detail || errJson.error || "Suppression impossible");
+      }
+
+      toast.success("Programme supprimé");
+      await loadCoachData();
+    } catch (error) {
+      toast.error(error.message || "Suppression impossible");
     }
   };
 
@@ -495,7 +572,9 @@ export default function CoachDashboard() {
                 </button>
               ) : (
                 <div className="create-program-section">
-                  <h2 className="section-title">Nouveau Programme</h2>
+                  <h2 className="section-title">
+                    {editingProgram ? `Modifier : ${editingProgram.title}` : "Nouveau Programme"}
+                  </h2>
                   <div className="form-group">
                     <label className="form-label">Titre du programme</label>
                     <input
@@ -555,16 +634,59 @@ export default function CoachDashboard() {
                       }
                     />
                   </div>
+                  <div className="form-group">
+                    <label className="form-label">Image de couverture</label>
+                    <input
+                      className="form-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files[0])}
+                    />
+                    {editingProgram?.image && (
+                      <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#64748b" }}>
+                        Image actuelle : <a href={editingProgram.image} target="_blank" rel="noreferrer" style={{ color: "#0f766e" }}>Voir l'image</a>
+                      </p>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Lien Vidéo YouTube / URL</label>
+                    <input
+                      className="form-input"
+                      type="url"
+                      placeholder="Ex: https://www.youtube.com/watch?v=..."
+                      value={newProgram.video_url || ""}
+                      onChange={(e) =>
+                        setNewProgram({
+                          ...newProgram,
+                          video_url: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Fichier Vidéo (MP4)</label>
+                    <input
+                      className="form-input"
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                    />
+                    {editingProgram?.video_file && (
+                      <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#64748b" }}>
+                        Vidéo MP4 actuelle : <a href={editingProgram.video_file} target="_blank" rel="noreferrer" style={{ color: "#0f766e" }}>Voir la vidéo</a>
+                      </p>
+                    )}
+                  </div>
                   <div className="button-group">
                     <button
                       className="btn btn-primary"
-                      onClick={handleCreateProgram}
+                      onClick={handleSaveProgram}
                     >
-                      Créer le programme
+                      {editingProgram ? "Enregistrer" : "Créer le programme"}
                     </button>
                     <button
                       className="btn btn-secondary"
-                      onClick={() => setShowCreateProgram(false)}
+                      onClick={handleCancelEdit}
                     >
                       Annuler
                     </button>
@@ -662,27 +784,49 @@ export default function CoachDashboard() {
               ) : (
                 <div className="cards-grid">
                   {programs.map((prog) => (
-                    <div key={prog.id} className="card">
-                      <h3 className="card-title">{prog.title || "Programme fitness"}</h3>
-                      <p className="card-content">
+                    <div key={prog.id} className="card" style={{ display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+                      {prog.image && (
+                        <div style={{ height: "160px", margin: "-20px -20px 0 -20px", overflow: "hidden", background: "#f1f5f9" }}>
+                          <img
+                            src={prog.image}
+                            alt={prog.title}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h3 className="card-title" style={{ margin: 0 }}>{prog.title || "Programme fitness"}</h3>
+                        {(prog.video_url || prog.video_file) && (
+                          <span style={{ fontSize: "11px", background: "#ecfdf5", color: "#047857", padding: "4px 8px", borderRadius: "6px", fontWeight: "900" }}>
+                            🎥 Vidéo
+                          </span>
+                        )}
+                      </div>
+                      <p className="card-content" style={{ flexGrow: 1 }}>
                         {prog.description || "Description non disponible"}
                       </p>
-                      <p className="card-content">
-                        <strong>Durée:</strong> {prog.duration || "Non disponible"} jours
-                      </p>
-                      <p className="card-content">
-                        <strong>Prix:</strong> {formatPrice(prog.price)}
-                      </p>
-                      <p className="card-content">
-                        <strong>Exercices:</strong>{" "}
-                        {prog.exercises?.length ? prog.exercises.length : "Aucun exercice"}
-                      </p>
-                      <p className="card-content">
-                        <strong>Nutrition:</strong>{" "}
-                        {prog.nutrition_plans?.length
-                          ? prog.nutrition_plans.length
-                          : "Aucun plan nutritionnel"}
-                      </p>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#64748b", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
+                        <span><strong>Durée:</strong> {prog.duration || "Non disponible"} jours</span>
+                        <span><strong>Prix:</strong> {formatPrice(prog.price)}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => handleEditProgram(prog)}
+                          style={{ flex: 1, padding: "8px 12px", fontSize: "13px" }}
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => handleDeleteProgram(prog)}
+                          style={{ flex: 1, padding: "8px 12px", fontSize: "13px", background: "#fee2e2", color: "#b91c1c", border: "1px solid rgba(185, 28, 28, 0.2)" }}
+                        >
+                          Supprimer
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

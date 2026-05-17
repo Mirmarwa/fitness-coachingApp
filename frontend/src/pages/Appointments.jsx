@@ -486,6 +486,73 @@ export default function Appointments() {
             color: #64748b;
           }
 
+          .live-session-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
+          }
+
+          .live-session-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .live-badge {
+            display: inline-flex;
+            align-items: center;
+            align-self: flex-start;
+            padding: 4px 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: blink 2s infinite ease-in-out;
+          }
+
+          .live-session-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+          }
+
+          .join-session-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 18px;
+            background: #10b981;
+            color: white;
+            font-size: 14px;
+            font-weight: 900;
+            text-decoration: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            white-space: nowrap;
+          }
+
+          .join-session-btn:hover {
+            transform: translateY(-2px);
+            background: #059669;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+          }
+
+          @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+
           @media (max-width: 768px) {
             .appointments-header {
               flex-direction: column;
@@ -500,6 +567,17 @@ export default function Appointments() {
             .appointment-details,
             .slot-details {
               grid-template-columns: 1fr;
+            }
+
+            .live-session-banner {
+              flex-direction: column;
+              align-items: stretch;
+              text-align: center;
+              gap: 12px;
+            }
+
+            .live-badge {
+              align-self: center;
             }
           }
         `}
@@ -690,40 +768,32 @@ export default function Appointments() {
                       </span>
                     </div>
 
-                    {appointment.video_link && (
-                      <div className="appointment-detail">
-                        <span className="appointment-label">Lien vidéo</span>
-                        <a
-                          href={appointment.video_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="appointment-value"
-                          style={{ color: "#0f766e", textDecoration: "underline" }}
-                        >
-                          Rejoindre la réunion
-                        </a>
-                      </div>
-                    )}
                   </div>
 
                   {appointment.notes && <p className="appointment-notes">"{appointment.notes}"</p>}
 
-                  <div className="appointment-actions">
-                    {userRole === "coach" && isAwaitingCoachConfirmation(appointment.status) && (
-                      <button className="action-button confirm-button" onClick={() => handleConfirmAppointment(appointment.id)}>
-                        Confirmer
-                      </button>
-                    )}
-
-                    {appointment.status === "confirmed" && appointment.video_link && (
+                  {["confirmed", "pending", "booked"].includes(appointment.status) && appointment.video_link && (
+                    <div className="live-session-banner">
+                      <div className="live-session-info">
+                        <span className="live-badge">🔴 Séance en direct</span>
+                        <p>{userRole === "coach" ? "Rejoignez votre client pour votre cours vidéo." : "Rejoignez votre coach pour votre cours vidéo."}</p>
+                      </div>
                       <a
                         href={appointment.video_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="action-button confirm-button"
+                        className="join-session-btn"
                       >
-                        Rejoindre
+                        🎥 Rejoindre la séance
                       </a>
+                    </div>
+                  )}
+
+                  <div className="appointment-actions">
+                    {userRole === "coach" && isAwaitingCoachConfirmation(appointment.status) && (
+                      <button className="action-button confirm-button" onClick={() => handleConfirmAppointment(appointment.id)}>
+                        Confirmer le rendez-vous
+                      </button>
                     )}
                   </div>
                 </div>

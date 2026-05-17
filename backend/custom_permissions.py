@@ -13,8 +13,8 @@ class IsCoachOwnerOrReadOnly(permissions.BasePermission):
         # Lecture seule autorisée pour tous
         if request.method in permissions.SAFE_METHODS:
             return True
-        # Écriture/suppression autorisée seulement si l'objet appartient au coach connecté
-        return hasattr(obj, 'coach') and obj.coach == request.user
+        # Écriture/suppression autorisée si l'objet appartient au coach connecté ou si l'utilisateur est staff
+        return (hasattr(obj, 'coach') and obj.coach == request.user) or request.user.is_staff
 
 
 class IsAppointmentOwnerOrParticipant(permissions.BasePermission):

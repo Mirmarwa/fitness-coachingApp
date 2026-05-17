@@ -1,11 +1,36 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, isStaff, isCoach, logout } = useAuth();
 
   const isLoggedIn = Boolean(localStorage.getItem("access") && user);
+
+  useEffect(() => {
+    if (isLoggedIn && isStaff) {
+      const clientCoachingPaths = [
+        "/dashboard",
+        "/coach-dashboard",
+        "/profile",
+        "/messages",
+        "/appointments",
+        "/programmes",
+        "/coaches",
+        "/progress",
+      ];
+      const path = location.pathname;
+      if (
+        clientCoachingPaths.includes(path) ||
+        path.startsWith("/coach/") ||
+        path.startsWith("/program/")
+      ) {
+        navigate("/admin-dashboard");
+      }
+    }
+  }, [isLoggedIn, isStaff, location.pathname, navigate]);
   const displayName =
     [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
     user?.username ||
@@ -139,12 +164,16 @@ export default function Navbar() {
         <NavLink to="/" className="app-nav-link">
           Accueil
         </NavLink>
-        <NavLink to="/programmes" className="app-nav-link">
-          Programmes
-        </NavLink>
-        <NavLink to="/coaches" className="app-nav-link">
-          Coachs
-        </NavLink>
+        {!isStaff && (
+          <NavLink to="/programmes" className="app-nav-link">
+            Programmes
+          </NavLink>
+        )}
+        {!isStaff && (
+          <NavLink to="/coaches" className="app-nav-link">
+            Coachs
+          </NavLink>
+        )}
         {isLoggedIn && isStaff && (
           <NavLink to="/admin-dashboard" className="app-nav-link">
             Admin
@@ -163,17 +192,17 @@ export default function Navbar() {
         <NavLink to="/articles" className="app-nav-link">
           Articles
         </NavLink>
-        {isLoggedIn && (
+        {isLoggedIn && !isStaff && (
           <NavLink to="/profile" className="app-nav-link">
             Profile
           </NavLink>
         )}
-        {isLoggedIn && (
+        {isLoggedIn && !isStaff && (
           <NavLink to="/messages" className="app-nav-link">
             Messages
           </NavLink>
         )}
-        {isLoggedIn && (
+        {isLoggedIn && !isStaff && (
           <NavLink to="/appointments" className="app-nav-link">
             Rendez-vous
           </NavLink>

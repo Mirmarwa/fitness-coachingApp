@@ -1,4 +1,6 @@
-const articles = [
+import { useState } from "react";
+
+const staticArticles = [
   {
     id: 1,
     title: "Nutrition pour prise de masse",
@@ -35,6 +37,17 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
 export default function Articles() {
+  const [articles] = useState(() => {
+    const saved = localStorage.getItem("articles");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return staticArticles;
+  });
   return (
     <main className="articles-page">
       <style>

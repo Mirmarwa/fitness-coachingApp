@@ -137,6 +137,7 @@ export default function Profile() {
           experience,
           description: coachInfo.description?.trim() || "",
           price,
+          video_link: coachInfo.video_link?.trim() || "",
         }),
       });
 
@@ -346,6 +347,20 @@ export default function Profile() {
                     value={coachInfo?.price ?? ""}
                     onChange={(e) => handleChange("price", e.target.value)}
                     placeholder="Ex: 250"
+                  />
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-label" htmlFor="video_link">
+                    Lien de séance vidéo (Google Meet / Zoom)
+                  </label>
+                  <input
+                    id="video_link"
+                    type="url"
+                    className="profile-input"
+                    value={coachInfo?.video_link || ""}
+                    onChange={(e) => handleChange("video_link", e.target.value)}
+                    placeholder="https://meet.google.com/abc-defg-hij"
                   />
                 </div>
 

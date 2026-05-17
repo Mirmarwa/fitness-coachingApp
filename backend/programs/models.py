@@ -10,6 +10,8 @@ class Program(models.Model):
     price = models.FloatField(default=0, validators=[MinValueValidator(0.0)])
     coach = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='programs/', blank=True, null=True)
+    video_url = models.CharField(max_length=500, blank=True, null=True)
+    video_file = models.FileField(upload_to='program_videos/', blank=True, null=True)
 
     def __str__(self):
         return self.title

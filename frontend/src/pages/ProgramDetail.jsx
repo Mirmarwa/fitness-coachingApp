@@ -5,6 +5,16 @@ import { authFetch, API_BASE_URL, BACKEND_BASE_URL } from "../services/api";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
 
+const getUserIdFromToken = (token) => {
+  try {
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.user_id;
+  } catch {
+    return null;
+  }
+};
+
 function ProgramDetail() {
   const { id } = useParams();
   const [program, setProgram] = useState(null);
@@ -13,13 +23,25 @@ function ProgramDetail() {
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState(null);
 
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11)
+      ? `https://www.youtube.com/embed/${match[2]}`
+      : null;
+  };
+
+  const hasVideo = Boolean(program?.video_url || program?.video_file);
+
   useEffect(() => {
     const loadProgram = async () => {
       try {
-        const [programResponse, paymentResponse, userPaymentsResponse] = await Promise.all([
+        const [programResponse, paymentResponse, userPaymentsResponse, myCoachesResponse] = await Promise.all([
           authFetch(`${API_BASE_URL}/programs/${id}/full/`),
           authFetch(`${API_BASE_URL}/payments/check/${id}/`),
           authFetch(`${API_BASE_URL}/payments/my/`),
+          authFetch(`${API_BASE_URL}/subscriptions/my-coaches/`),
         ]);
 
         if (!programResponse.ok) {
@@ -31,6 +53,9 @@ function ProgramDetail() {
         const userPaymentsData = userPaymentsResponse.ok
           ? await userPaymentsResponse.json()
           : [];
+        const myCoachesData = myCoachesResponse && myCoachesResponse.ok
+          ? await myCoachesResponse.json()
+          : [];
 
         if (!programData || Object.keys(programData).length === 0) {
           throw new Error("Empty program");
@@ -38,6 +63,7 @@ function ProgramDetail() {
 
         const programPayload = programData.program || programData;
 
+        // 1. Achat individuel
         const userPaid = Array.isArray(userPaymentsData)
           ? userPaymentsData.some((payment) => {
               const programId =
@@ -52,8 +78,23 @@ function ProgramDetail() {
             })
           : false;
 
+        // 2. Abonnement actif avec le coach du programme
+        const activeSub = Array.isArray(myCoachesData)
+          ? myCoachesData.some((sub) => String(sub.coach) === String(programPayload.coach) && sub.status === "active")
+          : false;
+
+        // 3. Propriétaire (coach du programme) ou admin/staff
+        const token = localStorage.getItem("access");
+        const currentUserId = getUserIdFromToken(token);
+        const currentRole = localStorage.getItem("user_role") || "client";
+
+        const isOwner = currentUserId && String(programPayload.coach) === String(currentUserId);
+        const isAdmin = currentRole === "admin" || currentRole === "staff";
+
+        const hasAccess = isOwner || isAdmin || userPaid || activeSub;
+
         setProgram(programPayload);
-        setPaid(userPaid);
+        setPaid(hasAccess);
       } catch {
         setProgram(null);
         setPaid(false);
@@ -177,6 +218,49 @@ function ProgramDetail() {
           </div>
         </div>
       </section>
+
+      {paid && hasVideo && (
+        <section className="video-section">
+          <div className="video-container">
+            <h2 className="video-title">🎥 Vidéo du Programme</h2>
+            <div className="player-wrapper">
+              {program.video_url && getEmbedUrl(program.video_url) ? (
+                <iframe
+                  src={getEmbedUrl(program.video_url)}
+                  title={program.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : program.video_url ? (
+                <video
+                  src={program.video_url}
+                  controls
+                  className="native-player"
+                ></video>
+              ) : program.video_file ? (
+                <video
+                  src={getImageUrl(program.video_file)}
+                  controls
+                  className="native-player"
+                ></video>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!paid && hasVideo && (
+        <section className="video-section locked">
+          <div className="video-container">
+            <div className="locked-overlay">
+              <span className="lock-icon">🔒</span>
+              <h2>Vidéo exclusive réservée aux membres</h2>
+              <p>Achetez ce programme pour débloquer immédiatement la vidéo d'accompagnement et commencer votre entraînement.</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="detail-grid">
         <div className="detail-panel">
@@ -455,6 +539,88 @@ const detailStyles = `
     .hero-content {
       padding: 28px;
     }
+  }
+
+  .video-section {
+    width: min(1160px, 100%);
+    margin: 0 auto 28px;
+  }
+
+  .video-container {
+    background: white;
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  }
+
+  .video-title {
+    margin: 0 0 16px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .player-wrapper {
+    position: relative;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    border-radius: 14px;
+    overflow: hidden;
+    background: #0f172a;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .player-wrapper iframe,
+  .player-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .native-player {
+    object-fit: contain;
+  }
+
+  .video-section.locked .video-container {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.05) 0%, rgba(15, 23, 42, 0.05) 100%);
+    border: 1px dashed rgba(15, 118, 110, 0.3);
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .locked-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lock-icon {
+    font-size: 40px;
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  .locked-overlay h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #0f766e;
+    font-weight: 800;
+  }
+
+  .locked-overlay p {
+    margin: 0;
+    max-width: 500px;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
   }
 `;
 

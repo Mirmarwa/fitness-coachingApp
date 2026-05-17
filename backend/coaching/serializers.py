@@ -93,11 +93,20 @@ class MessagePartialUpdateSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.username', read_only=True)
     coach_name = serializers.CharField(source='coach.username', read_only=True)
+    video_link = serializers.SerializerMethodField()
 
     class Meta:
         model = Appointment
         fields = ['id', 'client', 'coach', 'client_name', 'coach_name', 'date', 'time', 'status', 'video_link', 'notes', 'created_at']
         read_only_fields = ['client', 'created_at']
+
+    def get_video_link(self, obj):
+        try:
+            if hasattr(obj.coach, 'coach_profile') and obj.coach.coach_profile.video_link:
+                return obj.coach.coach_profile.video_link
+        except Exception:
+            pass
+        return obj.video_link
 
 
 # NOUVEAU: Serializer pour paiements coaching avec infos coach
