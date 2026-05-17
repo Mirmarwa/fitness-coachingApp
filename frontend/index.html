@@ -11,7 +11,7 @@
     <style>
       /* Global Resets */
       html, body {
-        background-color: #090d10 !important;
+        background-color: #0f172a !important;
         color: #e2e8f0 !important;
         font-family: 'Inter', system-ui, sans-serif !important;
         margin: 0;
@@ -27,7 +27,7 @@
         left: -10%;
         width: 50%;
         height: 50%;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.07) 0%, rgba(16, 185, 129, 0) 70%);
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.09) 0%, rgba(16, 185, 129, 0) 70%);
         z-index: -1;
         pointer-events: none;
         filter: blur(80px);
@@ -39,7 +39,7 @@
         right: -10%;
         width: 50%;
         height: 50%;
-        background: radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, rgba(5, 150, 105, 0) 70%);
+        background: radial-gradient(circle, rgba(20, 184, 166, 0.07) 0%, rgba(20, 184, 166, 0) 70%);
         z-index: -1;
         pointer-events: none;
         filter: blur(80px);
@@ -51,7 +51,7 @@
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #090d10;
+        background: #0f172a;
       }
       ::-webkit-scrollbar-thumb {
         background: #1e293b;
@@ -83,10 +83,10 @@
       .messages-section,
       .message-box,
       .empty-state {
-        background: rgba(15, 19, 25, 0.7) !important;
+        background: rgba(31, 41, 55, 0.75) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
-        border: 1px solid rgba(16, 185, 129, 0.16) !important;
+        border: 1px solid rgba(16, 185, 129, 0.18) !important;
         border-radius: 20px !important;
         box-shadow: 
           0 4px 30px rgba(0, 0, 0, 0.4),
@@ -276,25 +276,82 @@
         text-align: center !important;
       }
 
-      /* Entrance Fade-In animations */
-      main, .section, .cards-grid, table, .hero {
-        animation: premiumFadeInUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      /* High-end Intersection Scroll Animations */
+      .reveal-element {
+        opacity: 0 !important;
+        transform: translateY(30px) !important;
+        transition: 
+          opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+          transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
       }
 
-      @keyframes premiumFadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .reveal-visible {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+
+      /* Dynamic Scrolled Navbar */
+      .app-navbar {
+        transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+      }
+
+      .app-navbar.navbar-scrolled {
+        background: rgba(15, 23, 42, 0.85) !important;
+        padding: 10px 40px !important;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.25) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Interactive Scroll Animation Observer
+      document.addEventListener("DOMContentLoaded", () => {
+        const observerOptions = {
+          root: null,
+          rootMargin: "0px",
+          threshold: 0.05
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("reveal-visible");
+            }
+          });
+        }, observerOptions);
+
+        // Scan dynamically for scroll-animation elements
+        setInterval(() => {
+          const elements = document.querySelectorAll(
+            ".card, .featureCard, .statItem, .dashboard-card, table, tr, h1, h2, h3, .program-card-premium"
+          );
+          elements.forEach(el => {
+            if (!el.classList.contains("reveal-element") && !el.classList.contains("reveal-visible")) {
+              el.classList.add("reveal-element");
+              observer.observe(el);
+            }
+          });
+        }, 800);
+
+        // Navbar scrolled listener
+        const handleScroll = () => {
+          const nav = document.querySelector(".app-navbar");
+          if (nav) {
+            if (window.scrollY > 20) {
+              nav.classList.add("navbar-scrolled");
+            } else {
+              nav.classList.remove("navbar-scrolled");
+            }
+          }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        // Run once initially
+        handleScroll();
+      });
+    </script>
   </body>
 </html>
