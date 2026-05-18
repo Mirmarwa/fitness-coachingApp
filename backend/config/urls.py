@@ -10,6 +10,7 @@ from coaching.views import CoachViewSet, SubscriptionViewSet, MessageViewSet, Ap
 
 from rest_framework_simplejwt.views import TokenRefreshView
 from users.tokens import CustomTokenObtainPairView
+from chatbot_api import ChatbotAPIView
 
 # Import pour Swagger
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -42,6 +43,7 @@ urlpatterns = [
     # Swagger/OpenAPI documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/chatbot/', ChatbotAPIView.as_view(), name='chatbot-api'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

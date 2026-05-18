@@ -237,166 +237,50 @@ export default function CoachDashboard() {
 
   return (
     <main className="coach-dashboard">
-      <style>
-        {`
-          .coach-dashboard {
-            min-height: 100vh;
-            padding: 42px 24px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ecfdf5 50%, #ffffff 100%);
-            color: #10201c;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          }
+      <style>{`
+        .coach-dashboard { min-height:100vh; padding:42px 24px; background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 26%), linear-gradient(180deg, #050a11 0%, #0c1220 45%, #111821 100%); color:#e6eef0; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif }
 
-          .coach-container {
-            width: min(1280px, 100%);
-            margin: 0 auto;
-          }
+        .coach-container { width: min(1280px,100%); margin:0 auto }
 
-          .coach-header {
-            margin-bottom: 42px;
-          }
+        .coach-header { margin-bottom:36px }
 
-          .coach-title {
-            margin: 0 0 8px;
-            font-size: clamp(36px, 6vw, 48px);
-            font-weight: 900;
-            color: #0f172a;
-          }
+        .coach-title { margin:0 0 8px; font-size: clamp(32px,6vw,48px); font-weight:900; color:#f4fff9 }
 
-          .coach-subtitle {
-            margin: 0;
-            color: #64748b;
-            font-size: 18px;
-          }
+        .coach-subtitle { margin:0; color:#9fb1b0; font-size:16px }
 
-          .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 42px;
-          }
+        .stats-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:20px; margin-bottom:32px }
 
-          .stat-card {
-            background: white;
-            border-radius: 18px;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            padding: 28px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-            text-align: center;
-          }
+        .stat-card { background: rgba(255,255,255,0.04); border-radius:20px; border:1px solid rgba(255,255,255,0.08); padding:24px; box-shadow:0 24px 70px rgba(0, 0, 0, 0.45); text-align:center }
 
-          .stat-number {
-            margin: 0;
-            font-size: 42px;
-            font-weight: 900;
-            color: #0f766e;
-          }
+        .stat-number { margin:0; font-size:36px; font-weight:900; color:#bff7e6 }
 
-          .stat-label {
-            margin: 8px 0 0;
-            color: #64748b;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
+        .stat-label { margin:8px 0 0; color:#9fb1b0; font-size:13px; text-transform:uppercase; font-weight:800 }
 
-          .section {
-            margin-bottom: 42px;
-          }
+        .section { margin-bottom:36px }
 
-          .section-title {
-            margin: 0 0 20px;
-            font-size: 22px;
-            font-weight: 900;
-            color: #0f172a;
-            border-bottom: 2px solid #0f766e;
-            padding-bottom: 12px;
-          }
+        .section-title { margin:0 0 18px; font-size:20px; font-weight:900; color:#f1fff8; border-bottom:2px solid rgba(16,185,129,0.06); padding-bottom:10px }
 
-          .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-          }
+        .cards-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:18px }
 
-          .card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            padding: 20px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-            transition: all 200ms ease;
-          }
+        .card { background: rgba(255,255,255,0.04); border-radius:20px; border:1px solid rgba(255,255,255,0.08); padding:22px; box-shadow:0 24px 70px rgba(0,0,0,0.45); transition: transform 200ms cubic-bezier(.16,1,.3,1) }
 
-          .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-          }
+        .card:hover { transform: translateY(-6px); box-shadow:0 34px 88px rgba(0,0,0,0.7) }
 
-          .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 12px;
-          }
+        .card-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:12px }
 
-          .card-title {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 900;
-            color: #0f172a;
-          }
+        .card-title { margin:0; font-size:16px; font-weight:900; color:#f1fff8 }
 
-          .card-badge {
-            background: #dcfce7;
-            color: #166534;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-          }
+        .card-badge { padding:6px 10px; border-radius:8px; font-size:12px; font-weight:800 }
 
-          .card-badge.booked {
-            background: #fef08a;
-            color: #854d0e;
-          }
+        .card-badge.booked { background: linear-gradient(135deg, rgba(255,242,130,0.12), rgba(255,210,112,0.04)); color:#ffefc2 }
+        .card-badge.available { background: linear-gradient(135deg, rgba(221,234,255,0.06), rgba(16,143,177,0.02)); color:#cfe9ff }
+        .card-badge.confirmed { background: linear-gradient(135deg, rgba(209,250,229,0.06), rgba(6,95,70,0.02)); color:#dff8ef }
+        .card-badge.completed { background: rgba(255,255,255,0.02); color:#a6b3b9 }
+        .card-badge.cancelled { background: linear-gradient(135deg, rgba(255,178,178,0.06), rgba(255,120,120,0.02)); color:#ffd6d6 }
 
-          .card-badge.available {
-            background: #dbeafe;
-            color: #1e40af;
-          }
+        .card-content { margin:0; color:#9fb1b0; font-size:14px; line-height:1.6 }
 
-          .card-badge.confirmed {
-            background: #d1fae5;
-            color: #065f46;
-          }
-
-          .card-badge.completed {
-            background: #e5e7eb;
-            color: #374151;
-          }
-
-          .card-badge.cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-          }
-
-          .card-content {
-            margin: 0;
-            color: #52645f;
-            font-size: 14px;
-            line-height: 1.6;
-          }
-
-          .progress-item {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px;
-            margin: 8px 0;
-            font-size: 13px;
-            color: #52645f;
-          }
+        .progress-item { background: rgba(255,255,255,0.01); border-radius:10px; padding:10px; margin:8px 0; color:#9fb1b0 }
 
           .progress-weight {
             font-weight: 700;
@@ -406,7 +290,10 @@ export default function CoachDashboard() {
           .empty-state {
             text-align: center;
             padding: 40px 20px;
-            color: #64748b;
+            color: #9fb1b0;
+            background: rgba(255,255,255,0.04);
+            border: 1px dashed rgba(255,255,255,0.12);
+            border-radius: 20px;
           }
 
           .empty-state h3 {
@@ -420,11 +307,12 @@ export default function CoachDashboard() {
           }
 
           .create-program-section {
-            background: white;
-            border-radius: 18px;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            padding: 28px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 32px;
             margin-bottom: 42px;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.45);
           }
 
           .form-group {
@@ -442,12 +330,14 @@ export default function CoachDashboard() {
           .form-input,
           .form-textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(15, 118, 110, 0.2);
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
             font-size: 14px;
             font-family: inherit;
             box-sizing: border-box;
+            background: rgba(255,255,255,0.05);
+            color: #eef7f1;
           }
 
           .form-input:focus,
@@ -478,24 +368,24 @@ export default function CoachDashboard() {
           }
 
           .btn-primary {
-            background: #0f766e;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
+            box-shadow: 0 18px 40px rgba(16, 185, 129, 0.24);
           }
 
           .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.32);
+            box-shadow: 0 20px 44px rgba(16, 185, 129, 0.3);
           }
 
           .btn-secondary {
-            background: #ecfdf5;
-            color: #0f766e;
-            border: 1px solid rgba(15, 118, 110, 0.2);
+            background: rgba(255,255,255,0.08);
+            color: #d5f1e0;
+            border: 1px solid rgba(255,255,255,0.1);
           }
 
           .btn-secondary:hover {
-            background: #d1fae5;
+            background: rgba(255,255,255,0.12);
           }
 
           @media (max-width: 768px) {

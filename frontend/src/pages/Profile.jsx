@@ -160,13 +160,14 @@ export default function Profile() {
           .profile-page {
             min-height: 100vh;
             padding: 42px 24px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ecfdf5 50%, #ffffff 100%);
-            color: #10201c;
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 24%),
+              linear-gradient(180deg, #050a11 0%, #0f172a 45%, #121923 100%);
+            color: #eef7f1;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           }
 
           .profile-container {
-            width: min(600px, 100%);
+            width: min(760px, 100%);
             margin: 0 auto;
           }
 
@@ -177,10 +178,10 @@ export default function Profile() {
 
           .profile-kicker {
             margin: 0 0 10px;
-            color: #0f766e;
+            color: #9ff2c9;
             font-size: 13px;
             font-weight: 900;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
           }
 
@@ -188,14 +189,16 @@ export default function Profile() {
             margin: 0;
             font-size: clamp(34px, 6vw, 54px);
             line-height: 1;
+            color: #f4fff9;
           }
 
           .profile-card {
-            padding: 32px;
-            border-radius: 22px;
-            background: white;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            padding: 36px;
+            border-radius: 28px;
+            background: rgba(12, 18, 28, 0.92);
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
           }
 
           .profile-field {
@@ -208,9 +211,9 @@ export default function Profile() {
 
           .profile-label {
             display: block;
-            margin-bottom: 8px;
-            color: #0f172a;
-            font-size: 16px;
+            margin-bottom: 10px;
+            color: #c6efdd;
+            font-size: 15px;
             font-weight: 700;
           }
 
@@ -219,17 +222,18 @@ export default function Profile() {
           .profile-static {
             width: 100%;
             box-sizing: border-box;
-            padding: 12px 16px;
-            border: 1px solid rgba(15, 118, 110, 0.2);
-            border-radius: 12px;
-            background: #f8fafc;
-            color: #0f172a;
-            font-size: 16px;
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #eef7f1;
+            font-size: 15px;
             font-family: inherit;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
           }
 
           .profile-textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
           }
 
@@ -237,45 +241,46 @@ export default function Profile() {
             min-height: 48px;
             display: flex;
             align-items: center;
-            background: #f0fdfa;
-            border-color: rgba(15, 118, 110, 0.1);
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.08);
           }
 
           .profile-input:focus,
           .profile-textarea:focus {
             outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14);
           }
 
           .profile-button {
             width: 100%;
-            padding: 14px 24px;
+            padding: 16px 24px;
             border: 0;
-            border-radius: 14px;
-            background: #0f766e;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             font-size: 16px;
             font-weight: 900;
             cursor: pointer;
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            box-shadow: 0 18px 40px rgba(16, 185, 129, 0.24);
           }
 
           .profile-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            background: #115e59;
-            box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22);
+            background: linear-gradient(135deg, #059669, #0d806f);
+            box-shadow: 0 20px 48px rgba(16, 185, 129, 0.3);
           }
 
           .profile-button:disabled {
-            opacity: 0.6;
+            opacity: 0.65;
             cursor: not-allowed;
           }
 
           .loading {
             text-align: center;
             padding: 40px;
-            color: #64748b;
+            color: #94a99a;
           }
         `}
       </style>

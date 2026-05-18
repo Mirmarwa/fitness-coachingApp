@@ -98,7 +98,11 @@ export default function Register() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>Inscription</h2>
+        <div style={styles.header}>
+          <p style={styles.kicker}>Fitness Coaching</p>
+          <h2 style={styles.title}>Inscription</h2>
+          <p style={styles.subtitle}>Créez votre compte et accédez à votre espace premium personnalisé.</p>
+        </div>
 
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
@@ -159,64 +163,101 @@ export default function Register() {
 
 const styles = {
   container: {
-    height: "100vh",
+    minHeight: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg, #0f172a, #1e3a8a)",
+    padding: "30px 18px",
+    background: "linear-gradient(180deg, #06090d 0%, #0b131d 60%, #111924 100%)",
+    color: "#e6f6ef",
+    fontFamily:
+      'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   card: {
-    backgroundColor: "white",
-    padding: "40px",
-    borderRadius: "15px",
-    width: "360px",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+    background: "rgba(12, 18, 28, 0.92)",
+    padding: "42px 36px",
+    borderRadius: "28px",
+    width: "min(460px, 100%)",
+    boxShadow: "0 32px 90px rgba(0,0,0,0.5)",
+    border: "1px solid rgba(16, 185, 129, 0.16)",
     textAlign: "center",
+    backdropFilter: "blur(18px)",
   },
   title: {
-    marginBottom: "20px",
-    color: "#1e3a8a",
+    marginBottom: "10px",
+    color: "#f4fff9",
+    fontSize: "34px",
+    letterSpacing: "-0.03em",
+  },
+  header: {
+    marginBottom: "28px",
+    textAlign: "center",
+  },
+  kicker: {
+    margin: "0 0 10px",
+    color: "#9ff2c9",
+    fontSize: "12px",
+    fontWeight: 900,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+  },
+  subtitle: {
+    margin: "0",
+    color: "#9fb1b0",
+    fontSize: "15px",
+    lineHeight: 1.8,
   },
   form: {
     display: "flex",
     flexDirection: "column",
+    gap: "16px",
   },
   input: {
-    marginBottom: "15px",
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
+    width: "100%",
+    padding: "16px 18px",
+    borderRadius: "16px",
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.05)",
+    color: "#eef8f3",
+    fontSize: "15px",
     outline: "none",
+    boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.24)",
   },
   button: {
-    padding: "10px",
-    borderRadius: "8px",
+    padding: "14px 18px",
+    borderRadius: "16px",
     border: "none",
-    backgroundColor: "#2563eb",
+    background: "linear-gradient(135deg, #10b981, #059669)",
     color: "white",
-    fontWeight: "bold",
+    fontWeight: "900",
+    letterSpacing: "0.01em",
     cursor: "pointer",
+    boxShadow: "0 18px 36px rgba(16, 185, 129, 0.24)",
   },
   text: {
-    marginTop: "15px",
+    marginTop: "18px",
+    color: "#9fb1b0",
+    fontSize: "14px",
   },
   link: {
-    color: "#2563eb",
+    color: "#9ff2c9",
     textDecoration: "none",
-    fontWeight: "bold",
+    fontWeight: "900",
   },
   error: {
     marginBottom: "15px",
-    color: "#b91c1c",
-    backgroundColor: "#fee2e2",
-    padding: "10px",
-    borderRadius: "8px",
+    color: "#fee2e2",
+    backgroundColor: "rgba(248, 113, 113, 0.18)",
+    padding: "12px 14px",
+    borderRadius: "14px",
+    border: "1px solid rgba(248, 113, 113, 0.25)",
   },
   success: {
     marginBottom: "15px",
-    color: "#166534",
-    backgroundColor: "#dcfce7",
-    padding: "10px",
-    borderRadius: "8px",
+    color: "#dcfce7",
+    backgroundColor: "rgba(16, 185, 129, 0.18)",
+    padding: "12px 14px",
+    borderRadius: "14px",
+    border: "1px solid rgba(16, 185, 129, 0.25)",
   },
 };

@@ -188,13 +188,14 @@ export default function Appointments() {
           .appointments-page {
             min-height: 100vh;
             padding: 42px 24px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ecfdf5 50%, #ffffff 100%);
-            color: #10201c;
+            background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 26%),
+              linear-gradient(180deg, #050a11 0%, #0f172a 42%, #111924 100%);
+            color: #eef7f1;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           }
 
           .appointments-container {
-            width: min(1000px, 100%);
+            width: min(1100px, 100%);
             margin: 0 auto;
           }
 
@@ -202,7 +203,7 @@ export default function Appointments() {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 20px;
+            gap: 24px;
             margin-bottom: 32px;
           }
 
@@ -210,32 +211,34 @@ export default function Appointments() {
             margin: 0;
             font-size: clamp(34px, 6vw, 54px);
             line-height: 1;
+            color: #f4fff9;
           }
 
           .appointments-description {
-            margin: 8px 0 0;
-            color: #475569;
+            margin: 10px 0 0;
+            color: #9fb1b0;
             font-size: 16px;
-            max-width: 640px;
-            line-height: 1.6;
+            max-width: 680px;
+            line-height: 1.75;
           }
 
           .create-button {
             padding: 14px 24px;
             border: 0;
-            border-radius: 14px;
-            background: #0f766e;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             font-size: 16px;
             font-weight: 900;
             cursor: pointer;
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            box-shadow: 0 18px 40px rgba(16, 185, 129, 0.24);
           }
 
           .create-button:hover {
             transform: translateY(-2px);
-            background: #115e59;
-            box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22);
+            background: linear-gradient(135deg, #059669, #0d806f);
+            box-shadow: 0 20px 48px rgba(16, 185, 129, 0.3);
           }
 
           .section {
@@ -246,6 +249,7 @@ export default function Appointments() {
             margin: 0 0 20px;
             font-size: 26px;
             font-weight: 900;
+            color: #f4fff9;
           }
 
           .appointments-grid {
@@ -255,34 +259,38 @@ export default function Appointments() {
 
           .appointment-card,
           .slot-card {
-            padding: 24px;
-            border-radius: 22px;
-            background: white;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            padding: 26px;
+            border-radius: 28px;
+            background: rgba(12, 18, 28, 0.94);
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
           }
 
           .appointment-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 16px;
+            gap: 16px;
+            margin-bottom: 18px;
           }
 
           .appointment-coach {
-            margin: 0 0 4px;
-            font-size: 20px;
+            margin: 0 0 6px;
+            font-size: 22px;
             font-weight: 900;
-            color: #0f172a;
+            color: #f4fff9;
           }
 
           .appointment-status {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 999px;
             font-size: 13px;
             font-weight: 900;
             text-transform: uppercase;
             color: white;
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.24);
           }
 
           .appointment-details,
@@ -290,36 +298,36 @@ export default function Appointments() {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
           }
 
           .appointment-detail,
           .slot-detail {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
           }
 
           .appointment-label {
             font-size: 13px;
             font-weight: 800;
             text-transform: uppercase;
-            color: #64748b;
+            color: #8fb6a6;
           }
 
           .appointment-value,
           .slot-value {
             font-size: 16px;
             font-weight: 700;
-            color: #0f172a;
+            color: #eef7f1;
           }
 
           .appointment-notes {
             margin: 0 0 20px;
-            padding: 16px;
-            border-radius: 12px;
-            background: #f8fafc;
-            color: #374151;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #c8ddce;
             font-style: italic;
           }
 
@@ -332,18 +340,19 @@ export default function Appointments() {
 
           .action-button,
           .reserve-button {
-            padding: 10px 20px;
+            padding: 12px 22px;
             border: 0;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 14px;
             font-weight: 900;
             cursor: pointer;
-            transition: transform 160ms ease, background 160ms ease;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
           }
 
           .confirm-button {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
+            box-shadow: 0 16px 30px rgba(16, 185, 129, 0.2);
           }
 
           .confirm-button:hover,
@@ -352,27 +361,30 @@ export default function Appointments() {
           }
 
           .reserve-button {
-            background: #0f766e;
+            background: linear-gradient(135deg, #0f766e, #0b6d58);
             color: white;
+            box-shadow: 0 16px 30px rgba(15, 118, 110, 0.22);
           }
 
           .reserve-button:hover {
-            background: #115e59;
+            background: linear-gradient(135deg, #0d6f5f, #0a6252);
           }
 
           .create-form {
             margin-bottom: 32px;
-            padding: 24px;
-            border-radius: 22px;
-            background: white;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            padding: 28px;
+            border-radius: 28px;
+            background: rgba(12, 18, 28, 0.93);
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
           }
 
           .form-title {
-            margin: 0 0 20px;
+            margin: 0 0 22px;
             font-size: 24px;
             font-weight: 900;
+            color: #f4fff9;
           }
 
           .form-grid {
@@ -385,24 +397,24 @@ export default function Appointments() {
           .form-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
           }
 
           .form-label {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
-            color: #0f172a;
+            color: #c6efdd;
           }
 
           .form-input,
           .form-select,
           .form-textarea {
-            padding: 12px 16px;
-            border: 1px solid rgba(15, 118, 110, 0.2);
-            border-radius: 12px;
-            background: #f8fafc;
-            color: #0f172a;
-            font-size: 16px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #eef7f1;
+            font-size: 15px;
             transition: border-color 160ms ease, box-shadow 160ms ease;
           }
 
@@ -410,13 +422,13 @@ export default function Appointments() {
           .form-select:focus,
           .form-textarea:focus {
             outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16);
           }
 
           .form-textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
           }
 
           .form-actions {
@@ -428,34 +440,36 @@ export default function Appointments() {
           .submit-button {
             padding: 12px 24px;
             border: 0;
-            border-radius: 12px;
-            background: #0f766e;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             font-size: 16px;
             font-weight: 900;
             cursor: pointer;
-            transition: transform 160ms ease, background 160ms ease;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            box-shadow: 0 18px 40px rgba(16, 185, 129, 0.24);
           }
 
           .submit-button:hover {
             transform: translateY(-2px);
-            background: #115e59;
+            background: linear-gradient(135deg, #059669, #0d806f);
           }
 
           .cancel-form-button {
             padding: 12px 24px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            background: white;
-            color: #374151;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #c6efdd;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: background 160ms ease;
+            transition: background 160ms ease, border-color 160ms ease;
           }
 
           .cancel-form-button:hover {
-            background: #f9fafb;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(16, 185, 129, 0.24);
           }
 
           .empty-state {
@@ -463,27 +477,28 @@ export default function Appointments() {
             place-items: center;
             min-height: 240px;
             padding: 32px 24px;
-            border: 2px dashed rgba(15, 118, 110, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
             border-radius: 22px;
             text-align: center;
           }
 
           .empty-state h2 {
             margin: 0 0 10px;
-            color: #0f172a;
+            color: #f4fff9;
             font-size: 25px;
           }
 
           .empty-state p {
             margin: 0;
-            color: #64748b;
+            color: #9fb1b0;
             line-height: 1.6;
           }
 
           .loading {
             text-align: center;
             padding: 40px;
-            color: #64748b;
+            color: #94a99a;
           }
 
           .live-session-banner {
@@ -491,25 +506,25 @@ export default function Appointments() {
             justify-content: space-between;
             align-items: center;
             gap: 16px;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 14px;
+            padding: 18px 22px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.22);
+            border-radius: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
+            box-shadow: 0 12px 28px rgba(16, 185, 129, 0.08);
           }
 
           .live-session-info {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
           }
 
           .live-badge {
             display: inline-flex;
             align-items: center;
             align-self: flex-start;
-            padding: 4px 10px;
+            padding: 6px 12px;
             background: #ef4444;
             color: white;
             font-size: 11px;
@@ -523,7 +538,7 @@ export default function Appointments() {
           .live-session-info p {
             margin: 0;
             font-size: 14px;
-            color: #334155;
+            color: #c6efdd;
             font-weight: 600;
           }
 
@@ -531,21 +546,21 @@ export default function Appointments() {
             display: inline-flex;
             align-items: center;
             padding: 10px 18px;
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             font-size: 14px;
             font-weight: 900;
             text-decoration: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25);
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
             white-space: nowrap;
           }
 
           .join-session-btn:hover {
             transform: translateY(-2px);
-            background: #059669;
-            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+            background: linear-gradient(135deg, #059669, #0d806f);
+            box-shadow: 0 8px 22px rgba(16, 185, 129, 0.32);
           }
 
           @keyframes blink {

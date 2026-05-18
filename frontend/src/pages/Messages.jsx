@@ -131,8 +131,9 @@ export default function Messages() {
           .messages-page {
             min-height: 100vh;
             padding: 42px 24px;
-            background: linear-gradient(135deg, #f8fafc 0%, #ecfdf5 50%, #ffffff 100%);
-            color: #10201c;
+            background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%),
+              linear-gradient(180deg, #050a11 0%, #0f172a 40%, #111924 100%);
+            color: #e8f7ee;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           }
 
@@ -140,51 +141,54 @@ export default function Messages() {
             width: min(1200px, 100%);
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 360px 1fr;
             gap: 24px;
-            height: calc(100vh - 84px);
+            min-height: calc(100vh - 84px);
           }
 
           .conversations-list {
-            background: white;
-            border-radius: 22px;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            background: rgba(18, 27, 40, 0.92);
+            border-radius: 28px;
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
             overflow: hidden;
           }
 
           .conversations-header {
-            padding: 24px;
-            border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+            padding: 26px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
           }
 
           .conversations-title {
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
+            color: #f7fffb;
           }
 
           .conversation-item {
             padding: 20px 24px;
-            border-bottom: 1px solid rgba(15, 118, 110, 0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
             cursor: pointer;
-            transition: background 160ms ease;
+            transition: background 180ms ease, transform 180ms ease;
           }
 
           .conversation-item:hover,
           .conversation-item.active {
-            background: rgba(15, 118, 110, 0.04);
+            background: rgba(16, 185, 129, 0.08);
+            transform: translateX(1px);
           }
 
           .conversation-name {
-            margin: 0 0 6px;
-            font-weight: 700;
-            color: #0f172a;
+            margin: 0 0 8px;
+            font-weight: 800;
+            color: #e8f7ee;
           }
 
           .conversation-last-message {
             margin: 0;
-            color: #64748b;
+            color: #a8c4b9;
             font-size: 14px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -192,33 +196,35 @@ export default function Messages() {
           }
 
           .conversation-timestamp {
-            margin: 0;
-            color: #94a3b8;
+            margin: 10px 0 0;
+            color: #7f9f8c;
             font-size: 12px;
           }
 
           .chat-area {
-            background: white;
-            border-radius: 22px;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            background: rgba(12, 18, 28, 0.94);
+            border-radius: 28px;
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
             display: flex;
             flex-direction: column;
             overflow: hidden;
           }
 
           .chat-header {
-            padding: 24px;
-            border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+            padding: 26px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
           }
 
           .chat-title {
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
+            color: #f4fff9;
           }
 
-          .messages-container {
+          .message-panel {
             flex: 1;
             padding: 24px;
             overflow-y: auto;
@@ -229,83 +235,89 @@ export default function Messages() {
 
           .message {
             max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
+            padding: 16px 20px;
+            border-radius: 24px;
             font-size: 15px;
-            line-height: 1.5;
+            line-height: 1.7;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
           }
 
           .message.sent {
             align-self: flex-end;
-            background: #0f766e;
-            color: white;
+            background: linear-gradient(135deg, #059669, #0f766e);
+            color: #f4fff9;
           }
 
           .message.received {
             align-self: flex-start;
-            background: #f1f5f9;
-            color: #0f172a;
+            background: rgba(255, 255, 255, 0.08);
+            color: #e8f7ee;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
           }
 
           .message-sender {
-            font-weight: 700;
-            margin-bottom: 4px;
+            font-weight: 800;
+            margin-bottom: 6px;
             font-size: 13px;
           }
 
           .message.sent .message-sender {
-            color: #dcfce7;
+            color: rgba(220, 252, 231, 0.9);
           }
 
           .message.received .message-sender {
-            color: #64748b;
+            color: #a8c4b9;
           }
 
           .message-time {
             font-size: 12px;
-            margin-top: 4px;
-            opacity: 0.7;
+            margin-top: 10px;
+            opacity: 0.75;
           }
 
           .message.sent .message-time {
-            color: #dcfce7;
+            color: rgba(220, 252, 231, 0.85);
           }
 
           .message.received .message-time {
-            color: #64748b;
+            color: #98a99b;
           }
 
           .message-input-area {
             padding: 24px;
-            border-top: 1px solid rgba(15, 118, 110, 0.12);
+            border-top: 1px solid rgba(255,255,255,0.05);
             display: flex;
             gap: 12px;
+            background: rgba(9, 14, 22, 0.94);
           }
 
           .message-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 1px solid rgba(15, 118, 110, 0.2);
-            border-radius: 12px;
-            background: #f8fafc;
-            color: #0f172a;
+            min-height: 56px;
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #eef8f3;
             font-size: 16px;
             resize: none;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
           }
 
           .message-input:focus {
             outline: none;
-            border-color: #0f766e;
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
           }
 
           .send-button {
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: 0;
-            border-radius: 12px;
-            background: #0f766e;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             cursor: pointer;
             transition: transform 160ms ease, background 160ms ease;
@@ -313,7 +325,7 @@ export default function Messages() {
 
           .send-button:hover {
             transform: translateY(-2px);
-            background: #115e59;
+            background: linear-gradient(135deg, #059669, #0d806f);
           }
 
           .empty-state {
@@ -321,24 +333,26 @@ export default function Messages() {
             place-items: center;
             height: 100%;
             text-align: center;
-            color: #64748b;
+            color: #94a99a;
           }
 
           .empty-state h2 {
             margin: 0 0 10px;
-            font-size: 25px;
+            font-size: 26px;
+            color: #f4fff9;
           }
 
           .empty-state p {
             margin: 0;
-            max-width: 300px;
+            max-width: 320px;
             line-height: 1.6;
+            color: #9fb1b0;
           }
 
-          @media (max-width: 768px) {
+          @media (max-width: 900px) {
             .messages-container {
               grid-template-columns: 1fr;
-              height: auto;
+              min-height: auto;
             }
 
             .conversations-list {
@@ -346,7 +360,7 @@ export default function Messages() {
             }
 
             .chat-area {
-              height: 600px;
+              height: auto;
             }
           }
         `}
@@ -393,7 +407,7 @@ export default function Messages() {
                 <h2 className="chat-title">Conversation avec {selectedUser.name || selectedUser.username}</h2>
               </div>
 
-              <div className="messages-container">
+              <div className="message-panel">
                 {messages.length === 0 ? (
                   <div className="empty-state">
                     <div>

@@ -15,76 +15,46 @@ export default function ProgressStats({ data }) {
 
   return (
     <div className="progress-stats-container">
-      <style>
-        {`
-          .progress-stats-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
-            margin: 24px 0;
-          }
+      <style>{`
+        .progress-stats-container {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 18px;
+          margin: 24px 0;
+        }
 
-          .stat-card {
-            padding: 20px;
-            border-radius: 18px;
-            background: white;
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
-            transition: transform 160ms ease, box-shadow 160ms ease;
-          }
+        .stat-card {
+          padding: 18px;
+          border-radius: 16px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+          border: 1px solid rgba(16,185,129,0.06);
+          box-shadow: 0 18px 48px rgba(2,6,23,0.6);
+          transition: transform 260ms cubic-bezier(0.16,1,0.3,1), box-shadow 260ms ease;
+        }
 
-          .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-          }
+        .stat-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 30px 80px rgba(2,6,23,0.7), 0 0 28px rgba(16,185,129,0.06);
+        }
 
-          .stat-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-          }
+        .stat-icon { font-size: 22px; margin-bottom: 8px; }
 
-          .stat-label {
-            margin: 0;
-            font-size: 12px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
+        .stat-label {
+          margin: 0; font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;
+        }
 
-          .stat-value {
-            margin: 8px 0 0;
-            font-size: 28px;
-            font-weight: 900;
-            color: #0f172a;
-          }
+        .stat-value { margin: 8px 0 0; font-size: 26px; font-weight: 900; color: #e6f6ef; }
 
-          .stat-detail {
-            margin: 6px 0 0;
-            font-size: 13px;
-            color: #94a3b8;
-            font-weight: 600;
-          }
+        .stat-detail { margin: 6px 0 0; font-size: 13px; color: #9fb1b0; font-weight: 600; }
 
-          .stat-positive {
-            color: #22c55e;
-          }
+        .stat-positive { color: #9ff2c9; }
+        .stat-negative { color: #ffb6b6; }
 
-          .stat-negative {
-            color: #ef4444;
-          }
-
-          @media (max-width: 760px) {
-            .progress-stats-container {
-              grid-template-columns: 1fr;
-            }
-
-            .stat-value {
-              font-size: 24px;
-            }
-          }
-        `}
-      </style>
+        @media (max-width: 760px) {
+          .progress-stats-container { grid-template-columns: 1fr; }
+          .stat-value { font-size: 22px; }
+        }
+      `}</style>
 
       <div className="stat-card">
         <div className="stat-icon">⚖️</div>

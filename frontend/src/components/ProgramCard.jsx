@@ -43,14 +43,14 @@ export default function ProgramCard({
             position: relative;
             height: 380px;
             overflow: hidden;
-            border-radius: 24px;
-            background: #1f2937;
-            border: 1px solid rgba(16, 185, 129, 0.15);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(14,20,26,0.6), rgba(10,14,18,0.55));
+            border: 1px solid rgba(16,185,129,0.08);
+            box-shadow: 0 24px 60px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 420ms ease;
             cursor: pointer;
             text-decoration: none;
           }
@@ -89,8 +89,8 @@ export default function ProgramCard({
             width: 100%;
             height: 100%;
             z-index: 2;
-            background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.6) 40%, rgba(15, 23, 42, 0.1) 100%);
-            transition: background 300ms ease;
+            background: linear-gradient(to top, rgba(6,95,70,0.78) 0%, rgba(8,12,18,0.6) 40%, rgba(8,12,18,0.12) 100%);
+            transition: background 320ms ease, opacity 320ms ease;
           }
 
           .program-card-premium:hover .program-card-overlay {
@@ -108,16 +108,16 @@ export default function ProgramCard({
           }
 
           .premium-card-badge {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #10b981;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 10.5px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(16,185,129,0.08);
+            color: #dff8ef;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
           }
 
@@ -143,20 +143,20 @@ export default function ProgramCard({
 
           .premium-card-title {
             margin: 0;
-            color: #ffffff;
-            font-size: 21px;
-            font-weight: 800;
+            color: #f1f8f6;
+            font-size: 20px;
+            font-weight: 900;
             font-family: 'Outfit', sans-serif;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            text-shadow: 0 8px 28px rgba(6,95,70,0.12);
           }
 
           .premium-card-desc {
             margin: 0;
-            color: #cbd5e1;
-            font-size: 14px;
-            line-height: 1.5;
-            min-height: 42px;
-            opacity: 0.85;
+            color: #9fb1b0;
+            font-size: 13.5px;
+            line-height: 1.45;
+            min-height: 44px;
+            opacity: 0.95;
             transition: opacity 300ms ease;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -172,10 +172,11 @@ export default function ProgramCard({
           }
 
           .premium-card-price {
-            color: #10b981;
-            font-size: 20px;
+            color: #bff7e6;
+            font-size: 18px;
             font-weight: 900;
             font-family: 'Outfit', sans-serif;
+            text-shadow: 0 6px 18px rgba(6,95,70,0.08);
           }
 
           .premium-card-btn-container {
@@ -188,14 +189,14 @@ export default function ProgramCard({
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             padding: 8px 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 800;
-            font-size: 13.5px;
+            font-size: 14px;
             text-decoration: none;
             opacity: 0;
             transform: translateY(10px);
             transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 8px 26px rgba(16, 185, 129, 0.18);
           }
 
           .program-card-premium:hover .premium-card-btn {

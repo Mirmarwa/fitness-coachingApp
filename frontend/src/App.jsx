@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Chatbot from "./components/Chatbot";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -54,6 +55,7 @@ function App() {
       </main>
 
       <Footer />
+      <Chatbot />
     </BrowserRouter>
     </AuthProvider>
   );

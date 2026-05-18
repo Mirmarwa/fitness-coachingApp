@@ -12,9 +12,33 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+dotenv_path = BASE_DIR / ".env"
+if dotenv_path.exists():
+    if load_dotenv:
+        loaded = load_dotenv(dotenv_path)
+        if not loaded:
+            print(f"Warning: .env file found at {dotenv_path} but failed to load.")
+    else:
+        print("Warning: python-dotenv non installé, chargement manuel de .env.")
+        with dotenv_path.open(encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key.strip(), value.strip())
 
 
 # Quick-start development settings - unsuitable for production

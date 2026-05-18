@@ -63,13 +63,14 @@ export default function Coaches() {
           .coaches-page {
             min-height: 100vh;
             padding: 42px 24px 60px;
-            background: linear-gradient(180deg, #f8fafc 0%, #ecfdf5 56%, #ffffff 100%);
-            color: #0f172a;
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 24%),
+              linear-gradient(180deg, #050a11 0%, #0b121d 42%, #111821 100%);
+            color: #eef7f1;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           }
 
           .coaches-container {
-            width: min(1180px, 100%);
+            width: min(1200px, 100%);
             margin: 0 auto;
           }
 
@@ -79,18 +80,24 @@ export default function Coaches() {
             justify-content: space-between;
             gap: 24px;
             margin-bottom: 32px;
+            padding: 28px;
+            border-radius: 28px;
+            background: rgba(12, 18, 28, 0.94);
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 32px 90px rgba(0, 0, 0, 0.45);
           }
 
           .coaches-hero h1 {
             margin: 0;
             font-size: clamp(38px, 6vw, 56px);
             line-height: 1.02;
+            color: #f4fff9;
           }
 
           .coaches-hero p {
             max-width: 660px;
             margin: 18px 0 0;
-            color: #475569;
+            color: #9fb1b0;
             font-size: 16px;
             line-height: 1.8;
           }
@@ -101,25 +108,29 @@ export default function Coaches() {
             gap: 16px;
             align-items: center;
             margin-bottom: 26px;
+            padding: 24px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
           }
 
           .filter-label {
-            font-size: 14px;
-            font-weight: 800;
-            color: #0f766e;
-            letter-spacing: 0.06em;
+            font-size: 13px;
+            font-weight: 900;
+            color: #9ff2c9;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
           }
 
           .filter-select {
             min-width: 180px;
-            padding: 14px 16px;
+            padding: 14px 18px;
             border-radius: 16px;
-            border: 1px solid rgba(15, 118, 110, 0.18);
-            background: white;
-            color: #0f172a;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            color: #eef7f1;
             font-size: 15px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.18);
           }
 
           .coaches-grid {
@@ -135,32 +146,32 @@ export default function Coaches() {
             padding: 40px 24px;
             border-radius: 24px;
             text-align: center;
-            background: white;
-            border: 1px dashed rgba(15, 118, 110, 0.24);
-            box-shadow: 0 20px 48px rgba(15, 23, 42, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255,255,255,0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
           }
 
           .loading-state h2,
           .empty-state h2 {
             margin: 0 0 10px;
             font-size: 24px;
-            color: #0f172a;
+            color: #f4fff9;
           }
 
           .loading-state p,
           .empty-state p {
             margin: 0;
-            color: #667085;
+            color: #9fb1b0;
             line-height: 1.7;
           }
 
           .error-state {
             margin-top: 24px;
             padding: 20px 24px;
-            border-radius: 16px;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
+            border-radius: 18px;
+            background: rgba(255, 118, 117, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: #fee2e2;
             text-align: center;
           }
 
