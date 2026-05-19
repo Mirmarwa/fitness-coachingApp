@@ -53,6 +53,8 @@ export default function CoachDashboard() {
   const [editingProgram, setEditingProgram] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [exercises, setExercises] = useState([]);
+  const [nutritionPlans, setNutritionPlans] = useState([]);
 
   useEffect(() => {
     loadCoachData();
@@ -90,6 +92,9 @@ export default function CoachDashboard() {
       );
 
       setPrograms(ownedPrograms);
+    // Pré-remplir exercices/nutrition si on est en édition
+    // (ceci aide si l'UI garde en mémoire un programme déjà chargé)
+    // note: handleEditProgram gère le set réel quand on clique sur Modifier
     } catch (error) {
       setError("Impossible de charger les données du dashboard.");
       toast.error("Erreur lors du chargement du dashboard");
@@ -110,6 +115,22 @@ export default function CoachDashboard() {
     });
     setImageFile(null);
     setVideoFile(null);
+    // remplir exercices et nutrition si présents
+    setExercises(Array.isArray(program.exercises) ? program.exercises.map(e => ({
+      id: e.id,
+      name: e.name || '',
+      description: e.description || '',
+      reps: e.reps || 0,
+      sets: e.sets || 0,
+    })) : []);
+    setNutritionPlans(Array.isArray(program.nutrition_plans) ? program.nutrition_plans.map(n => ({
+      id: n.id,
+      title: n.title || '',
+      calories: n.calories || 0,
+      protein: n.protein || 0,
+      carbs: n.carbs || 0,
+      fats: n.fats || 0,
+    })) : []);
     setShowCreateProgram(true);
   };
 
@@ -119,6 +140,8 @@ export default function CoachDashboard() {
     setNewProgram({ title: "", description: "", duration: "30", price: "", video_url: "" });
     setImageFile(null);
     setVideoFile(null);
+    setExercises([]);
+    setNutritionPlans([]);
   };
 
   const handleSaveProgram = async (e) => {
@@ -154,6 +177,14 @@ export default function CoachDashboard() {
       }
       if (videoFile) {
         formData.append("video_file", videoFile);
+      }
+
+      // append exercises and nutrition as JSON strings so backend peut les parser
+      if (Array.isArray(exercises) && exercises.length > 0) {
+        formData.append('exercises', JSON.stringify(exercises));
+      }
+      if (Array.isArray(nutritionPlans) && nutritionPlans.length > 0) {
+        formData.append('nutrition_plans', JSON.stringify(nutritionPlans));
       }
 
       const token = localStorage.getItem("access");
@@ -211,6 +242,27 @@ export default function CoachDashboard() {
     } catch (error) {
       toast.error(error.message || "Suppression impossible");
     }
+  };
+
+  // --- Exercises & Nutrition handlers ---
+  const addExercise = () => {
+    setExercises((s) => [...s, { name: '', description: '', reps: 0, sets: 0 }]);
+  };
+  const updateExercise = (index, field, value) => {
+    setExercises((s) => s.map((it, i) => i === index ? { ...it, [field]: value } : it));
+  };
+  const removeExercise = (index) => {
+    setExercises((s) => s.filter((_, i) => i !== index));
+  };
+
+  const addNutritionPlan = () => {
+    setNutritionPlans((s) => [...s, { title: '', calories: 0, protein: 0, carbs: 0, fats: 0 }]);
+  };
+  const updateNutritionPlan = (index, field, value) => {
+    setNutritionPlans((s) => s.map((it, i) => i === index ? { ...it, [field]: value } : it));
+  };
+  const removeNutritionPlan = (index) => {
+    setNutritionPlans((s) => s.filter((_, i) => i !== index));
   };
 
   const stats = {
@@ -444,10 +496,7 @@ export default function CoachDashboard() {
                 <p className="stat-number">{stats.programs}</p>
                 <p className="stat-label">Programmes créés</p>
               </div>
-              <div className="stat-card">
-                <p className="stat-number">{stats.revenue}</p>
-                <p className="stat-label">Revenus</p>
-              </div>
+              {/* Revenus retirés temporairement (non fonctionnel) */}
             </div>
 
             {/* ➕ CRÉER UN PROGRAMME */}
@@ -567,6 +616,48 @@ export default function CoachDashboard() {
                       </p>
                     )}
                   </div>
+
+                  {/* Exercices */}
+                  <div className="form-group">
+                    <label className="form-label">Exercices</label>
+                    {exercises.length === 0 && <p style={{color:'#9fb1b0'}}>Aucun exercice ajouté.</p>}
+                    {exercises.map((ex, idx) => (
+                      <div key={idx} style={{marginBottom:8}}>
+                        <div style={{display:'grid', gridTemplateColumns:'1fr 90px 90px auto', gap:8, alignItems:'center'}}>
+                          <input className="form-input" placeholder="Nom de l'exercice" value={ex.name} onChange={e=>updateExercise(idx,'name',e.target.value)} />
+                          <input className="form-input" type="number" placeholder="Reps" value={ex.reps} onChange={e=>updateExercise(idx,'reps',Number(e.target.value))} />
+                          <input className="form-input" type="number" placeholder="Sets" value={ex.sets} onChange={e=>updateExercise(idx,'sets',Number(e.target.value))} />
+                          <button type="button" className="btn" onClick={()=>removeExercise(idx)} style={{padding:'6px 8px'}}>Suppr</button>
+                        </div>
+                        <textarea className="form-textarea" placeholder="Description" value={ex.description} onChange={e=>updateExercise(idx,'description',e.target.value)} style={{marginTop:8}} />
+                      </div>
+                    ))}
+                    <div style={{marginTop:8}}>
+                      <button type="button" className="btn btn-secondary" onClick={addExercise}>+ Ajouter un exercice</button>
+                    </div>
+                  </div>
+
+                  {/* Nutrition */}
+                  <div className="form-group">
+                    <label className="form-label">Plan nutritionnel</label>
+                    {nutritionPlans.length === 0 && <p style={{color:'#9fb1b0'}}>Aucun plan nutrition ajouté.</p>}
+                    {nutritionPlans.map((n, idx) => (
+                      <div key={idx} style={{marginBottom:8}}>
+                        <div style={{display:'grid', gridTemplateColumns:'1fr 80px 80px 80px 80px auto', gap:8, alignItems:'center'}}>
+                          <input className="form-input" placeholder="Titre" value={n.title} onChange={e=>updateNutritionPlan(idx,'title',e.target.value)} />
+                          <input className="form-input" type="number" placeholder="Calories" value={n.calories} onChange={e=>updateNutritionPlan(idx,'calories',Number(e.target.value))} />
+                          <input className="form-input" type="number" placeholder="Protéines" value={n.protein} onChange={e=>updateNutritionPlan(idx,'protein',Number(e.target.value))} />
+                          <input className="form-input" type="number" placeholder="Glucides" value={n.carbs} onChange={e=>updateNutritionPlan(idx,'carbs',Number(e.target.value))} />
+                          <input className="form-input" type="number" placeholder="Lipides" value={n.fats} onChange={e=>updateNutritionPlan(idx,'fats',Number(e.target.value))} />
+                          <button type="button" className="btn" onClick={()=>removeNutritionPlan(idx)} style={{padding:'6px 8px'}}>Suppr</button>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{marginTop:8}}>
+                      <button type="button" className="btn btn-secondary" onClick={addNutritionPlan}>+ Ajouter un plan nutritionnel</button>
+                    </div>
+                  </div>
+
                   <div className="button-group">
                     <button
                       className="btn btn-primary"

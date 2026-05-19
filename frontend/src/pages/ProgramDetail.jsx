@@ -279,9 +279,12 @@ function ProgramDetail() {
               exercises.map((exercise) => (
                 <article className="mini-card" key={exercise.id || exercise.name}>
                   <h3>{exercise.name || "Exercice"}</h3>
+                  <p className="mini-card-desc">
+                    {exercise.description || "Description de l'exercice non disponible."}
+                  </p>
                   <div className="mini-meta">
-                    <span>{exercise.sets || "Non disponible"} séries</span>
-                    <span>{exercise.reps || "Non disponible"} reps</span>
+                    <span>{exercise.sets || "–"} séries</span>
+                    <span>{exercise.reps || "–"} reps</span>
                   </div>
                 </article>
               ))
@@ -307,9 +310,15 @@ function ProgramDetail() {
               nutritionPlans.map((plan) => (
                 <article className="mini-card" key={plan.id || plan.title}>
                   <h3>{plan.title || "Plan nutritionnel"}</h3>
-                  <div className="mini-meta">
-                    <span>{plan.calories || "Non disponible"} kcal</span>
-                  </div>
+                  <p className="mini-card-desc">
+                    {plan.calories ? `${plan.calories} kcal` : "Calories non définies"}
+                    {plan.protein || plan.carbs || plan.fats ? ", " : ""}
+                    {plan.protein ? `${plan.protein}g protéines` : ""}
+                    {plan.protein && plan.carbs ? ", " : ""}
+                    {plan.carbs ? `${plan.carbs}g glucides` : ""}
+                    {(plan.protein || plan.carbs) && plan.fats ? ", " : ""}
+                    {plan.fats ? `${plan.fats}g lipides` : ""}
+                  </p>
                 </article>
               ))
             )}
@@ -495,6 +504,13 @@ const detailStyles = `
     margin: 0 0 12px;
     color: #0f172a;
     font-size: 18px;
+  }
+
+  .mini-card-desc {
+    margin: 0 0 10px;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   .mini-meta {

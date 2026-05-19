@@ -279,6 +279,29 @@ function Dashboard() {
             box-shadow: 0 18px 34px rgba(15, 118, 110, 0.28);
           }
 
+          .program-detail-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 12px;
+            color: #cde7e0;
+            font-size: 13px;
+            font-weight: 700;
+          }
+
+          .program-meta-list {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 14px;
+            color: #d7efe9;
+            font-size: 13px;
+            line-height: 1.5;
+          }
+
+          .program-meta-list p {
+            margin: 0;
+          }
+
           .empty-state { display:grid; place-items:center; min-height:220px; padding:28px; border-radius:18px; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.12); }
 
           .loading-spinner { width:42px; height:42px; margin:0 auto 16px; border:4px solid rgba(16,185,129,0.12); border-top-color: rgba(16,185,129,0.35); border-radius:999px; animation: dashboard-spin 850ms linear infinite }
@@ -403,6 +426,8 @@ function Dashboard() {
             <div className="program-grid">
               {purchasedPrograms.map((program, index) => {
                   const resolvedProgramId = program?.id;
+                  const programExercises = Array.isArray(program?.exercises) ? program.exercises : [];
+                  const nutritionPlans = Array.isArray(program?.nutrition_plans) ? program.nutrition_plans : [];
 
                   return (
                     <article
@@ -431,6 +456,31 @@ function Dashboard() {
                         <p className="program-description">
                           {getShortDescription(program?.description)}
                         </p>
+
+                        <div className="program-detail-row">
+                          <span>{programExercises.length} exercice{programExercises.length > 1 ? 's' : ''}</span>
+                          <span>{nutritionPlans.length} plan nutritionnel{nutritionPlans.length > 1 ? 's' : ''}</span>
+                        </div>
+
+                        {programExercises.length > 0 && (
+                          <div className="program-meta-list">
+                            {programExercises.slice(0, 2).map((exercise, exerciseIndex) => (
+                              <p key={exercise.id || exercise.name || exerciseIndex}>
+                                <strong>{exercise.name || 'Exercice'}</strong> — {exercise.sets || '–'} séries x {exercise.reps || '–'} reps
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {nutritionPlans.length > 0 && (
+                          <div className="program-meta-list" style={{ marginTop: 10 }}>
+                            {nutritionPlans.slice(0, 1).map((plan, planIndex) => (
+                              <p key={plan.id || plan.title || planIndex}>
+                                <strong>{plan.title || 'Plan nutritionnel'}</strong> — {plan.calories || '–'} kcal
+                              </p>
+                            ))}
+                          </div>
+                        )}
 
                         {resolvedProgramId && (
                           <Link
