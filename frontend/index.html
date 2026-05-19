@@ -312,29 +312,23 @@
         const observerOptions = {
           root: null,
           rootMargin: "0px",
-          threshold: 0.05
+          threshold: 0.1
         };
 
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
               entry.target.classList.add("reveal-visible");
+              observer.unobserve(entry.target);
             }
           });
         }, observerOptions);
 
-        // Scan dynamically for scroll-animation elements
-        setInterval(() => {
-          const elements = document.querySelectorAll(
-            ".card, .featureCard, .statItem, .dashboard-card, table, tr, h1, h2, h3, .program-card-premium"
-          );
-          elements.forEach(el => {
-            if (!el.classList.contains("reveal-element") && !el.classList.contains("reveal-visible")) {
-              el.classList.add("reveal-element");
-              observer.observe(el);
-            }
-          });
-        }, 800);
+        // Observe only explicitly marked reveal elements.
+        const elements = document.querySelectorAll(".reveal-element");
+        elements.forEach(el => {
+          observer.observe(el);
+        });
 
         // Navbar scrolled listener
         const handleScroll = () => {
@@ -349,7 +343,6 @@
         };
 
         window.addEventListener("scroll", handleScroll);
-        // Run once initially
         handleScroll();
       });
     </script>

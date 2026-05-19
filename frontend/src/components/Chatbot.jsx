@@ -12,11 +12,13 @@ const Chatbot = () => {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState("");
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isOpen]);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const appendMessage = (newMessage) => {
     setMessages((current) => [...current, newMessage]);
@@ -97,7 +99,7 @@ const Chatbot = () => {
         </div>
 
         <div className="chatbot-body">
-          <div className="chatbot-messages" role="log" aria-live="polite">
+          <div className="chatbot-messages" ref={messagesContainerRef} role="log" aria-live="polite">
             {messages.map((item, index) => (
               <div
                 key={`${item.role}-${index}`}
@@ -123,7 +125,6 @@ const Chatbot = () => {
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           <form className="chatbot-form" onSubmit={sendMessage}>
