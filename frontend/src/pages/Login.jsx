@@ -70,13 +70,15 @@ export default function Login() {
   return (
     <main style={styles.page}>
       <section style={styles.card}>
-        <div style={styles.header}>
+        <center>  
+        <div >
           <p style={styles.kicker}>Fitness Coaching</p>
           <h1 style={styles.title}>Connexion</h1>
           <p style={styles.subtitle}>
             Connectez-vous pour accéder à votre espace selon votre rôle.
           </p>
         </div>
+        </center>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
