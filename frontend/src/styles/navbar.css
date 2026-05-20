@@ -1,0 +1,252 @@
+.app-navbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--space-5) !important;
+  min-height: var(--nav-height) !important;
+  padding: 14px var(--container-padding) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  box-shadow: 0 10px 36px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  font-family: var(--font-body) !important;
+}
+
+.app-logo {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: var(--text-primary) !important;
+  font-size: 1rem !important;
+  font-weight: 860 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  letter-spacing: 0 !important;
+}
+
+.app-logo-mark {
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  box-shadow: var(--shadow-btn) !important;
+}
+
+.app-logo-text {
+  color: var(--accent-navy) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.app-nav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-full) !important;
+  background: rgba(248, 250, 252, 0.78) !important;
+}
+
+.app-nav-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 38px !important;
+  padding: 8px 15px !important;
+  border-radius: var(--radius-full) !important;
+  color: var(--text-muted) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 720 !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+}
+
+.app-nav-link:hover {
+  color: var(--text-primary) !important;
+  background: #ffffff !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.app-nav-link.active {
+  color: #ffffff !important;
+  background: var(--accent-navy) !important;
+  border-color: var(--accent-navy) !important;
+  box-shadow: 0 10px 24px rgba(7, 21, 46, 0.16) !important;
+}
+
+.user-section,
+.navbar-auth-buttons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.btn-login {
+  color: var(--text-secondary) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 760 !important;
+  text-decoration: none !important;
+}
+
+.btn-login:hover {
+  color: var(--accent-blue) !important;
+}
+
+.btn-register {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 42px !important;
+  padding: 9px 18px !important;
+  border-radius: var(--radius-full) !important;
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 820 !important;
+  box-shadow: var(--shadow-btn) !important;
+}
+
+.btn-register:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-glow-strong) !important;
+}
+
+.user-menu-container {
+  position: relative !important;
+}
+
+.user-avatar-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 46px !important;
+  padding: 6px 14px 6px 7px !important;
+  border-radius: var(--radius-full) !important;
+  border: 1px solid var(--border-default) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.user-avatar-btn:hover {
+  border-color: var(--border-accent) !important;
+  transform: translateY(-1px) !important;
+}
+
+.avatar-circle {
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+.avatar-name {
+  color: var(--text-primary) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 760 !important;
+  max-width: 130px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.avatar-arrow {
+  color: var(--text-faint) !important;
+  font-size: 10px !important;
+}
+
+.navbar-dropdown {
+  position: absolute !important;
+  right: 0 !important;
+  top: calc(100% + 12px) !important;
+  width: 240px !important;
+  display: none !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 8px !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: var(--shadow-lg) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.navbar-dropdown.open {
+  display: flex !important;
+  animation: navDrop 0.22s var(--ease-out) !important;
+}
+
+@keyframes navDrop {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 11px 13px !important;
+  border-radius: 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 720 !important;
+  text-align: left !important;
+}
+
+.dropdown-item:hover {
+  color: var(--text-primary) !important;
+  background: var(--bg-tertiary) !important;
+}
+
+.dropdown-divider {
+  height: 1px !important;
+  margin: 5px 0 !important;
+  background: var(--border-default) !important;
+}
+
+.dropdown-logout {
+  color: #b42318 !important;
+}
+
+.dropdown-logout:hover {
+  background: #fff1f0 !important;
+}
+
+@media (max-width: 900px) {
+  .app-navbar {
+    padding-inline: 18px !important;
+  }
+
+  .app-nav-links {
+    display: none !important;
+  }
+
+  .app-logo-text {
+    max-width: 160px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .user-avatar-btn .avatar-name {
+    display: none !important;
+  }
+
+  .btn-login {
+    display: none !important;
+  }
+}

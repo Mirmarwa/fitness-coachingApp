@@ -1,0 +1,586 @@
+/*
+ * App-wide light UI overrides for legacy inline/page-scoped styles.
+ * These rules intentionally avoid changing React logic or backend calls.
+ */
+
+.home-page,
+.dashboard-page,
+.coach-dashboard,
+.admin-page,
+.admin-dashboard,
+.profile-page,
+.messages-page,
+.appointments-page,
+.progress-page,
+.programs-page,
+.coaches-page,
+.coach-page,
+.articles-page,
+.detail-page,
+.program-detail-page,
+.onboarding-page,
+.not-found-page,
+main[style] {
+  min-height: calc(100vh - var(--nav-height)) !important;
+  padding: clamp(28px, 4vw, 52px) var(--container-padding) clamp(52px, 7vw, 88px) !important;
+  background: var(--gradient-page) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body) !important;
+}
+
+.programs-container,
+.dashboard-container,
+.coach-container,
+.admin-container,
+.profile-container,
+.messages-container,
+.appointments-container,
+.progress-container,
+.coaches-container,
+.articles-container,
+.detail-grid,
+.video-section {
+  width: min(var(--container-max), 100%) !important;
+  margin-inline: auto !important;
+}
+
+.dashboard-title,
+.coach-title,
+.admin-header h1,
+.profile-title,
+.messages-title,
+.appointments-title,
+.progress-title,
+.programs-title,
+.coaches-hero h1,
+.coach-content h1,
+.hero-content h1,
+.section-title,
+.chat-title,
+.conversations-title,
+.video-title,
+.form-title,
+.card-title,
+.program-title,
+.premium-card-title,
+.feature-card h3,
+h1,
+h2,
+h3 {
+  color: var(--text-primary) !important;
+  letter-spacing: 0 !important;
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3,
+.detail-hero h1,
+.hero-content h1,
+.premium-card-title {
+  color: #ffffff !important;
+}
+
+.programs-kicker,
+.dashboard-kicker,
+.profile-kicker,
+.progress-kicker,
+.coach-kicker,
+.filter-label,
+.section-info,
+.coach-speciality,
+.panel-header p,
+.progress-day,
+.view-more-link,
+.ai-list strong,
+.form-group label,
+.programs-count strong,
+.header-card strong,
+.stat-card strong,
+.stat-number,
+.stat-value {
+  color: var(--accent-blue) !important;
+}
+
+.programs-text,
+.dashboard-subtitle,
+.coach-subtitle,
+.admin-header p,
+.profile-card p,
+.progress-subtitle,
+.appointments-description,
+.coaches-hero p,
+.coach-description,
+.program-description,
+.premium-card-desc,
+.card-content,
+.card-description,
+.conversation-last-message,
+.conversation-timestamp,
+.message-time,
+.appointment-details,
+.slot-details,
+.appointment-notes,
+.empty-state p,
+.loading-state p,
+.section-text,
+p {
+  color: var(--text-secondary);
+}
+
+.dashboard-header,
+.programs-header,
+.appointments-header,
+.progress-header,
+.coach-header,
+.admin-header,
+.profile-header {
+  margin-bottom: clamp(24px, 4vw, 42px) !important;
+}
+
+.coaches-hero,
+.ai-panel,
+.detail-hero,
+main[style] > section:first-child[style] {
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: var(--radius-3xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.coaches-hero,
+.ai-panel {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.82)) !important;
+  color: var(--text-primary) !important;
+}
+
+.ai-panel {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  padding: clamp(22px, 4vw, 34px) !important;
+  border-color: var(--border-accent) !important;
+}
+
+.ai-panel h2,
+.ai-panel p {
+  color: var(--text-primary) !important;
+}
+
+.ai-panel p {
+  color: var(--text-secondary) !important;
+}
+
+.ai-button {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+}
+
+main[style] > section:first-child[style] {
+  width: min(1220px, 100%) !important;
+  min-height: clamp(520px, 72vh, 760px) !important;
+  margin: 0 auto clamp(42px, 6vw, 72px) !important;
+  background-image:
+    linear-gradient(90deg, rgba(7, 21, 46, 0.92), rgba(7, 21, 46, 0.56) 48%, rgba(7, 21, 46, 0.12)),
+    url("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1800&q=82") !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+main[style] > section:first-child[style] h1,
+main[style] > section:first-child[style] p {
+  color: #ffffff !important;
+}
+
+main[style] > section:first-child[style] a:first-of-type,
+main[style] > section:first-child[style] a:last-of-type {
+  border-radius: var(--radius-full) !important;
+  font-weight: 820 !important;
+}
+
+main[style] > section:first-child[style] a:first-of-type {
+  background: #ffffff !important;
+  color: var(--accent-navy) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18) !important;
+}
+
+main[style] > section:first-child[style] a:last-of-type {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+main[style] > section:nth-of-type(2)[style] > div,
+main[style] > section[style] > div[style],
+.stat-card,
+.statItem,
+.header-card,
+.programs-count {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-card) !important;
+  color: var(--text-primary) !important;
+}
+
+.stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  gap: clamp(16px, 2vw, 24px) !important;
+}
+
+.stat-card {
+  text-align: left !important;
+}
+
+.stat-label,
+.programs-count span,
+.header-card span,
+.stat-card span {
+  color: var(--text-muted) !important;
+}
+
+.program-grid,
+.coaches-grid,
+.cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important;
+  gap: clamp(18px, 2vw, 26px) !important;
+}
+
+.coaches-grid {
+  align-items: stretch !important;
+}
+
+.coach-card {
+  display: grid !important;
+  min-width: 0 !important;
+  flex: initial !important;
+  gap: 15px !important;
+  padding: 24px !important;
+}
+
+.coach-card h3,
+.coach-card p,
+.coach-card span {
+  color: var(--text-primary) !important;
+}
+
+.coach-card p,
+.coach-card span:not(:first-child) {
+  color: var(--text-secondary) !important;
+}
+
+.coach-card button {
+  width: 100% !important;
+  border-radius: var(--radius-full) !important;
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-btn) !important;
+}
+
+.coach-hero {
+  background: #ffffff !important;
+}
+
+.coach-content {
+  background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92)) !important;
+}
+
+.coach-speciality {
+  background: #eef4ff !important;
+  color: var(--accent-navy) !important;
+}
+
+.coach-message {
+  background: #eef4ff !important;
+  color: var(--accent-navy) !important;
+  border: 1px solid var(--border-accent) !important;
+}
+
+.detail-hero {
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+.detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(7, 21, 46, 0.92), rgba(7, 21, 46, 0.48), rgba(7, 21, 46, 0.08));
+  pointer-events: none;
+}
+
+.detail-hero .hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.back-link {
+  color: #ffffff !important;
+}
+
+.hero-content p {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.buy-button.paid {
+  background: #ffffff !important;
+  color: var(--accent-navy) !important;
+}
+
+.panel-header > span,
+.featureIcon,
+.stat-icon {
+  background: #eef4ff !important;
+  color: var(--accent-navy) !important;
+}
+
+.mini-card,
+.empty-mini-card,
+.progress-item,
+.appointment-notes,
+.live-session-banner,
+.section-info,
+.program-meta-list p,
+.ai-list span,
+.ai-json {
+  background: #f8fafc !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-secondary) !important;
+}
+
+.mini-meta span {
+  background: #eef4ff !important;
+  color: var(--accent-navy) !important;
+}
+
+.profile-card,
+.create-program-section,
+.create-form,
+.add-progress-form,
+.data-card,
+.admin-form-card {
+  padding: clamp(22px, 4vw, 36px) !important;
+}
+
+.messages-container {
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) !important;
+  min-height: min(760px, calc(100vh - 130px)) !important;
+}
+
+.conversations-list,
+.chat-area {
+  overflow: hidden !important;
+}
+
+.conversations-header,
+.chat-header,
+.message-input-area {
+  background: rgba(248, 250, 252, 0.9) !important;
+  border-color: var(--border-default) !important;
+}
+
+.conversation-item {
+  border-color: var(--border-default) !important;
+}
+
+.conversation-item:hover,
+.conversation-item.active {
+  background: #eef4ff !important;
+  transform: translateX(2px) !important;
+}
+
+.message-panel {
+  background:
+    linear-gradient(rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+    #ffffff !important;
+  background-size: 28px 28px !important;
+}
+
+.message.sent,
+.message-bubble.user {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+}
+
+.message.received,
+.message-bubble.assistant {
+  background: #f1f5f9 !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
+}
+
+.message-sender {
+  color: var(--accent-blue) !important;
+}
+
+.chatbot-widget {
+  color: var(--text-primary) !important;
+}
+
+.chatbot-toggle,
+.chatbot-header,
+.chatbot-body {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.chatbot-toggle {
+  border-radius: 24px !important;
+}
+
+.chatbot-icon,
+.chatbot-avatar,
+.message-avatar,
+.chatbot-send {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+}
+
+.chatbot-title,
+.chatbot-label strong {
+  color: var(--text-primary) !important;
+}
+
+.chatbot-subtitle,
+.chatbot-label small {
+  color: var(--text-muted) !important;
+}
+
+.chatbot-body {
+  border-top: 0 !important;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb {
+  background: #c7d2e5 !important;
+}
+
+.admin-page .tab-button {
+  background: #ffffff !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.admin-page .tab-button.active {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+}
+
+.admin-page .badge.client,
+.admin-page .badge.coach,
+.admin-page .badge.staff,
+.admin-page .badge.active,
+.admin-page .badge.expired {
+  background: #eef4ff !important;
+  color: var(--accent-navy) !important;
+}
+
+.admin-page .badge.expired,
+.badge.cancelled,
+.card-badge.cancelled {
+  background: #fff1f0 !important;
+  color: #b42318 !important;
+}
+
+.btn-row,
+.button-group,
+.form-actions,
+.appointment-actions,
+.slot-actions,
+.coach-actions,
+.hero-actions {
+  gap: 12px !important;
+}
+
+.auth-page,
+main[style]:has(form) {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.16), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f4f7fb 100%) !important;
+}
+
+main[style]:has(form) > section,
+main[style]:has(form) > div {
+  background: rgba(255, 255, 255, 0.84) !important;
+  border: 1px solid var(--border-default) !important;
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text-primary) !important;
+}
+
+main[style]:has(form) h1,
+main[style]:has(form) h2,
+main[style]:has(form) p,
+main[style]:has(form) label {
+  color: var(--text-primary) !important;
+}
+
+main[style]:has(form) button {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-full) !important;
+}
+
+main[style]:has(form) a {
+  color: var(--accent-blue) !important;
+}
+
+@media (max-width: 900px) {
+  .programs-header,
+  .dashboard-header,
+  .appointments-header,
+  .progress-header,
+  .coaches-hero,
+  .ai-panel {
+    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .messages-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .conversations-list {
+    display: block !important;
+    max-height: 300px !important;
+  }
+
+  .chat-area {
+    min-height: 560px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-hero,
+  .detail-hero,
+  main[style] > section:first-child[style] {
+    min-height: 560px !important;
+    border-radius: var(--radius-2xl) !important;
+  }
+
+  .hero-content,
+  main[style] > section:first-child[style] > div {
+    padding: 28px !important;
+  }
+
+  .form-actions,
+  .button-group,
+  .hero-actions,
+  .coach-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .form-actions > *,
+  .button-group > *,
+  .hero-actions > *,
+  .coach-actions > * {
+    width: 100% !important;
+  }
+}
